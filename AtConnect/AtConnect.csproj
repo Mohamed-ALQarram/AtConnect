@@ -14,4 +14,8 @@
     <Folder Include="Controllers\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\AtConnect.BLL\AtConnect.BLL.csproj" />
+  </ItemGroup>
+
 </Project>

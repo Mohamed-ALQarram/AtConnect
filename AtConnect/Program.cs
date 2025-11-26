@@ -1,4 +1,6 @@
 
+using AtConnect.DAL.Data;
+using Microsoft.EntityFrameworkCore;
 using System;
 
 namespace AtConnect
