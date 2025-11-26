@@ -26,11 +26,13 @@ namespace AtConnect.DAL.Models
 
         public AppUser User { get; private set; } = null!;
 
+        // Activate / deactivate
         public void SetActive(bool active)
         {
             IsActive = active;
         }
 
+        // Replace token
         public void UpdateToken(string newToken)
         {
             Token = newToken;
