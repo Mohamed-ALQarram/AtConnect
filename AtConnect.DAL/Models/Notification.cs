@@ -1,4 +1,5 @@
-﻿using System;
+﻿using AtConnect.DAL.Enum;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,10 +11,11 @@ namespace AtConnect.DAL.Models
     {
         private Notification() { } 
 
-        public Notification(int userId, string message)
+        public Notification(int userId, string message, NotificationType type)
         {
             UserId = userId;
             Message = message;
+            Type = type;
             CreatedAt = DateTime.UtcNow;
             IsRead = false;
         }
@@ -21,6 +23,7 @@ namespace AtConnect.DAL.Models
         public int Id { get; private set; }
         public int UserId { get; private set; }
         public string Message { get; private set; } = null!;
+        public NotificationType Type { get; private set; } 
         public DateTime CreatedAt { get; private set; }
         public bool IsRead { get; private set; }
 
@@ -31,5 +34,5 @@ namespace AtConnect.DAL.Models
             IsRead = true;
         }
     }
-
+    
 }
