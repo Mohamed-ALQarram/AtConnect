@@ -20,6 +20,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\AtConnect.BLL\AtConnect.BLL.csproj" />
+    <ProjectReference Include="..\AtConnect.DAL\AtConnect.DAL.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,13 +1,13 @@
-﻿using AtConnect.DAL.Models;
+﻿using AtConnect.Core.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 
-namespace AtConnect.DAL.Configurations
+namespace AtConnect.DAL.Data.Configurations
 {
-    public class DevcieTokenConfigurations : IEntityTypeConfiguration<DevcieToken>
+    public class DevcieTokenConfigurations : IEntityTypeConfiguration<DeviceToken>
     {
-        public void Configure(EntityTypeBuilder<DevcieToken> builder)
+        public void Configure(EntityTypeBuilder<DeviceToken> builder)
         {
             builder.HasKey(dt => dt.Id);
 

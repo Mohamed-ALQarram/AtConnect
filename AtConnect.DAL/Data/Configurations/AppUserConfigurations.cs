@@ -1,9 +1,9 @@
-﻿using AtConnect.DAL.Models;
+﻿using AtConnect.Core.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 
-namespace AtConnect.DAL.Configurations
+namespace AtConnect.Core.Data.Configurations
 {
     public class AppUserConfigurations : IEntityTypeConfiguration<AppUser>
     {

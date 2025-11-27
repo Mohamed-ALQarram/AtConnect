@@ -1,4 +1,4 @@
-﻿namespace AtConnect.DAL.Models
+﻿namespace AtConnect.Core.Models
 {
     public class Chat
     {

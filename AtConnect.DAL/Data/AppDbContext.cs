@@ -1,5 +1,5 @@
-﻿using AtConnect.DAL.Models;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
+using AtConnect.Core.Models;
 
 namespace AtConnect.DAL.Data
 {
@@ -13,7 +13,7 @@ namespace AtConnect.DAL.Data
         public DbSet<Message> Messages { get; set; }
         public DbSet<ChatRequest> ChatRequests { get; set; }
         public DbSet<Notification> Notifications { get; set; }
-        public DbSet<DevcieToken> DevcieTokens { get; set; }
+        public DbSet<DeviceToken> DevcieTokens { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

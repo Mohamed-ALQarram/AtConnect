@@ -4,13 +4,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace AtConnect.DAL.Models
+namespace AtConnect.Core.Models
 {
-    public class DevcieToken
+    public class DeviceToken
     {
-        private DevcieToken() { } 
+        private DeviceToken() { } 
 
-        public DevcieToken(int userId, string fcmToken)
+        public DeviceToken(int userId, string fcmToken)
         {
             UserId = userId;
             Token = fcmToken;

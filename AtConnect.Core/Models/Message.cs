@@ -1,6 +1,6 @@
-﻿using AtConnect.DAL.Enum;
+﻿using AtConnect.Core.Enum;
 
-namespace AtConnect.DAL.Models
+namespace AtConnect.Core.Models
 {
     public class Message
     {

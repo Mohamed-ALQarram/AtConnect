@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace AtConnect.DAL.Enum
+namespace AtConnect.Core.Enum
 {
     public enum NotificationType
     {

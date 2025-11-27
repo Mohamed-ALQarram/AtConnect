@@ -1,9 +1,9 @@
-﻿using AtConnect.DAL.Models;
+﻿using AtConnect.Core.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 
-namespace AtConnect.DAL.Configurations
+namespace AtConnect.DAL.Data.Configurations
 {
     public class ChatRequestConfigurations : IEntityTypeConfiguration<ChatRequest>
     {

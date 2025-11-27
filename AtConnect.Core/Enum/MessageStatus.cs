@@ -1,5 +1,4 @@
-﻿
-namespace AtConnect.DAL.Enum
+﻿namespace AtConnect.Core.Enum
 {
     public enum MessageStatus
     {
