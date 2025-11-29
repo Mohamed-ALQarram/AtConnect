@@ -20,16 +20,20 @@ namespace AtConnect.Core.Models
         public int Id { get; private set; }
         public string UserName { get; private set; } = null!;
         public string Email { get; private set; } = null!;
+        public bool isEmailVerified { get; private set; } = false;
         public string PasswordHash { get; private set; } = null!;
-
         public string? RefreshToken { get; private set; }
         public DateTime? RefreshTokenExpiryTime { get; private set; } = null;
-        public string? PasswordResetToken { get; private set; }
-        public DateTime? ResetTokenExpires { get; private set; } = null;
+        public string? VerifyToken { get; private set; } //This Token will be used for both Email Verification, and Reset Password Token
+        public DateTime? VerifyTokenExpires { get; private set; } = null;
 
         public void ChangeEmail(string newEmail)
         {
             Email = newEmail;
+        }
+        public void EmailVerification(bool isVerified)
+        {
+            isEmailVerified = isVerified;
         }
 
         public void ChangeUserName(string newUserName)
@@ -54,16 +58,16 @@ namespace AtConnect.Core.Models
             RefreshTokenExpiryTime = null;
         }
 
-        public void SetPasswordResetToken(string token, DateTime expiry)
+        public void SetVerifyToken(string token, DateTime expiry)
         {
-            PasswordResetToken = token;
-            ResetTokenExpires = expiry;
+            VerifyToken = token;
+            VerifyTokenExpires = expiry;
         }
 
-        public void ClearPasswordResetToken()
+        public void ClearVerifyToken()
         {
-            PasswordResetToken = null;
-            ResetTokenExpires = null;
+            VerifyToken = null;
+            VerifyTokenExpires = null;
         }
 
     }

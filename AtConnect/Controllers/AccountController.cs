@@ -19,48 +19,65 @@ namespace AtConnect.Controllers
             this.authenticationService = authentication;
         }
         [HttpPost("/Login")]
-        public async Task<ActionResult<AuthResponse>> LogIn(LoginRequest LoginData)
+        public async Task<ActionResult<TokenResponse>> LogIn(LoginRequest LoginData)
         {
-            return await authenticationService.LoginAsync(LoginData.UserNameOrEmail, LoginData.PasswordHash);
+                var Tokens = await authenticationService.LoginAsync(LoginData);
+            return new TokenResponse(true, "Logged in Successfully.", Tokens);
         }
         [HttpPost("/Register")]
-        public async Task<ActionResult<AuthResponse>> Register(RegistrationRequest registrationRequest)
+        public async Task<ActionResult<ResponseDTO>> Register(RegistrationRequest registrationRequest)
         {
-            return await authenticationService.RegisterAsync(
-                new AppUser(registrationRequest.FirstName, registrationRequest.LastName,
+            var User = new AppUser(registrationRequest.FirstName, registrationRequest.LastName,
                     registrationRequest.UserName, registrationRequest.Email,
-                    registrationRequest.Password));
+                    registrationRequest.Password);
+                
+            if (!await authenticationService.RegisterAsync(User))
+                return BadRequest(new ResponseDTO(false,"Invalid Mail"));
+
+            return new ResponseDTO(true,"The Verification code has been sent to your mail.");
         }
 
-        [HttpPost("/ForgotPassword")]
-        public async Task<ActionResult> ForgotPassword(ForgotPasswordDTO forgotPasswordDTO)
+  
+        [HttpPost("/Email/VerifyToken")]
+        public async Task<ActionResult<TokenResponse>> VerifyEmailToken(ConfirmEmailVerificationRequest verificationToken)
         {
-            if (await authenticationService.ForgetPasswordAsync(forgotPasswordDTO))
-                return Ok("The password reset code has been sent to your mail.");
-            return BadRequest("Invalid Mail");
+            var AuthResponse = await authenticationService.VerifyEmailToken(verificationToken);
+            if(AuthResponse == null)
+                    return BadRequest(new TokenResponse(false,"Invalid Mail", null!));
+           return Ok(new TokenResponse(true, "Your account verified successfully.", AuthResponse));
         }
-        [HttpPost("/VerifyResetToken")]
-        public async Task<ActionResult> VerifyResetToken(VerifyResetTokenDTO verifyResetTokenDTO)
+
+
+        [HttpPost("/ForgotPassword")]
+        public async Task<ActionResult<ResponseDTO>> ForgotPassword(EmailVerificationRequest verifyToken)
         {
-            if (await authenticationService.VerifyResetPasswordTokenAsync(verifyResetTokenDTO))
-                return Ok("OTP verified successfully. You can now reset your password.");
-            return BadRequest("Invalid or expired OTP.");
+            if (await authenticationService.ForgetPasswordAsync(verifyToken))
+                return new ResponseDTO(true,"The password reset code has been sent to your mail.");
+            return BadRequest(new ResponseDTO(false, "Invalid Mail"));
+        }
+
+        [HttpPost("/VerifyResetToken")]
+        public async Task<ActionResult<ResponseDTO>> VerifyResetToken(ConfirmEmailVerificationRequest verifyResetTokenDTO)
+        {
+            if (await authenticationService.VerifyTokenAsync(verifyResetTokenDTO)== null)
+                    return BadRequest(new ResponseDTO(false,"Invalid or expired OTP."));
+                return new ResponseDTO(true, "OTP verified successfully. You can now reset your password.");
         }
         [HttpPost("/ResetPassword")]
-        public async Task<ActionResult> ResetPassword(ResetPasswordDTO resetPasswordDTO)
+        public async Task<ActionResult<ResponseDTO>> ResetPassword(ResetPasswordRequest resetPasswordDTO)
         {
             if (await authenticationService.ResetPasswordAsync(resetPasswordDTO))
-                return Ok("Password has been reset successfully.");
-            return BadRequest("Invalid or expired OTP.");
+                return new ResponseDTO(true, "Password has been reset successfully.");
+            return BadRequest(new ResponseDTO(false, "Invalid or expired OTP."));
         }
 
         [HttpPost("/RefreshToken")]
-        public async Task<ActionResult<AuthResponse>> RefreshToken(RefreshTokenDTO request)
+        public async Task<ActionResult<TokenResponse>> RefreshToken(RefreshTokenRequest request)
         {
             var authResponse = await authenticationService.RefreshTokenAsync(request);
             if (authResponse == null)
-                return Unauthorized("Invalid refresh token.");
-            return authResponse;
+                return Unauthorized(new TokenResponse(false,"Invalid refresh token.",null!));
+            return new TokenResponse(true, "Token has been refreshed successfully.", authResponse);
         }
 
     }

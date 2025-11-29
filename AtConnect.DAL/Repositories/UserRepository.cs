@@ -16,12 +16,12 @@ namespace AtConnect.DAL.Repositories
 
         public async Task<bool> CheckEmailAsync(string email)
         {
-            return await appDbContext.AppUsers.AnyAsync(u=>u.Email == email);
+            return await appDbContext.AppUsers.AnyAsync(u=>u.Email == email &&u.isEmailVerified==true);
         }
 
         public async Task<bool> CheckUserNameAsync(string username)
         {
-            return await appDbContext.AppUsers.AnyAsync(u => u.UserName == username);
+            return await appDbContext.AppUsers.AnyAsync(u => u.UserName == username && u.isEmailVerified == true);
         }
 
         public async Task<AppUser?> GetByUserNameOrEmailAsync(string UserNameOrEmail)
