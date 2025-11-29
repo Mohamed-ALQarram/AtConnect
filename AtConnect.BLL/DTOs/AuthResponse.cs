@@ -11,8 +11,8 @@ namespace AtConnect.BLL.DTOs
         public string AccessToken { get; set; }=string.Empty;
         public string RefreshToken { get; set; } = string.Empty;
         public string TokenType { get; set; } = string.Empty;
-        public DateTime ExpiresIn { get; set; } 
-        public int RefreshTokenExpiresIn { get; set; }
+        public DateTime JwtExpiresIn { get; set; } 
+        public DateTime RefreshTokenExpiresIn { get; set; }
     }
 }
 

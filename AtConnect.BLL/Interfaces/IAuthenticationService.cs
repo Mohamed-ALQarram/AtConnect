@@ -12,7 +12,7 @@ namespace AtConnect.BLL.Interfaces
     {
         Task<AuthResponse> RegisterAsync(AppUser user);
         Task<AuthResponse> LoginAsync(string UserNameOrEmail, string password);
-        Task<AuthResponse> RefreshTokenAsync(string refreshToken);
+        Task<AuthResponse> RefreshTokenAsync(RefreshTokenDTO refreshTokenDTO);
         Task<AuthResponse?> GetUserProfileAsync(int userId);
         Task<bool> ForgetPasswordAsync(ForgotPasswordDTO forgotPasswordDTO);
         Task<bool> VerifyResetPasswordTokenAsync(VerifyResetTokenDTO verifyResetTokenDTO);

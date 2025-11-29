@@ -6,6 +6,11 @@ using AtConnect.Core.Interfaces;
 using AtConnect.Core.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace AtConnect.BLL.Services
 {
@@ -14,13 +19,16 @@ namespace AtConnect.BLL.Services
         private readonly IUnitOfWork unitOfWork;
         private readonly IEmailService emailService;
         private readonly IConfiguration configuration;
+        private readonly TokenValidationParameters validationParameters;
         private readonly JwtOptions jwtOptions;
 
-        public AuthenticationService(IUnitOfWork unitOfWork, IEmailService emailService, IConfiguration configuration, IOptions<JwtOptions> JwtOptions)
+        public AuthenticationService(IUnitOfWork unitOfWork, IEmailService emailService,
+            IConfiguration configuration, IOptions<JwtOptions> JwtOptions, TokenValidationParameters validationParameters)
         {
             this.unitOfWork = unitOfWork;
             this.emailService = emailService;
             this.configuration = configuration;
+            this.validationParameters = validationParameters;
             jwtOptions = JwtOptions.Value;
         }
         public async Task<bool> ForgetPasswordAsync(ForgotPasswordDTO forgotPasswordDTO)
@@ -65,30 +73,77 @@ namespace AtConnect.BLL.Services
             return new AuthResponse
             {
                 AccessToken = token,
-                ExpiresIn = DateTime.UtcNow.Add(jwtOptions.LifeTime)
+                JwtExpiresIn = DateTime.UtcNow.Add(jwtOptions.JwtLifeTime),
+                RefreshToken = User.RefreshToken??"",
+                RefreshTokenExpiresIn= User.RefreshTokenExpiryTime?? DateTime.UtcNow
             };
 
         }
 
-        public Task<AuthResponse> RefreshTokenAsync(string refreshToken)
+        public async Task<AuthResponse> RefreshTokenAsync(RefreshTokenDTO refreshTokenDTO)
         {
-            throw new NotImplementedException();
+            var Principal= GetPrincipalFromExpiredToken(refreshTokenDTO.OldToken);
+            int.TryParse(Principal.FindFirst(ClaimTypes.NameIdentifier)?.Value, out int userId);
+            if(userId ==0) throw new SecurityTokenException("Invalid token");
+
+            var user = await unitOfWork.Users.GetByKeysAsync(userId);
+            if (user == null || user.RefreshToken!=refreshTokenDTO.RefreshToken ||user.RefreshTokenExpiryTime <= DateTime.UtcNow)
+                return null!;
+            var newAccessToken = TokenHelper.CreateJWT(user, configuration, jwtOptions);
+            var newRefreshToken = GenerateRawRefreshToken();
+            var RefreshTokenExpireDate = DateTime.UtcNow.AddDays(jwtOptions.RefreshTokenLifeTime);
+            user.SetRefreshToken(newRefreshToken, RefreshTokenExpireDate);
+            await unitOfWork.SaveChangesAsync();
+            return new AuthResponse
+            {
+                AccessToken = newAccessToken,
+                RefreshToken = newRefreshToken,
+                TokenType = "Bearer",
+                JwtExpiresIn =DateTime.UtcNow.Add(jwtOptions.JwtLifeTime) ,
+                RefreshTokenExpiresIn = RefreshTokenExpireDate
+            };
+        }
+        private string GenerateRawRefreshToken()
+        {
+            var randomNumber = new byte[64];
+            using (var rng = RandomNumberGenerator.Create())
+            {
+                rng.GetBytes(randomNumber);
+                return $"{Convert.ToBase64String(randomNumber)}_{Guid.NewGuid()}";
+            }
         }
 
-        public async Task<AuthResponse> RegisterAsync(AppUser user)
+        public ClaimsPrincipal GetPrincipalFromExpiredToken(string token)
+        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var principal = tokenHandler.ValidateToken(token, validationParameters, out SecurityToken securityToken);
+
+            if (securityToken is not JwtSecurityToken jwtSecurityToken)
+                throw new SecurityTokenException("Invalid token");
+
+            return principal;
+        }
+
+
+        public async Task<AuthResponse> RegisterAsync(AppUser User)
         {
             
-            if (await unitOfWork.Users.CheckEmailAsync(user.Email)) throw new DuplicateWaitObjectException("This email already exists.");
-            if (await unitOfWork.Users.CheckUserNameAsync(user.UserName)) throw new DuplicateWaitObjectException("This UserName already exists.");
-            user.ChangePassword(PasswordHasher.Hash(user.PasswordHash));
-            await unitOfWork.Users.AddAsync(user);
+            if (await unitOfWork.Users.CheckEmailAsync(User.Email)) throw new DuplicateWaitObjectException("This email already exists.");
+            if (await unitOfWork.Users.CheckUserNameAsync(User.UserName)) throw new DuplicateWaitObjectException("This UserName already exists.");
+            User.ChangePassword(PasswordHasher.Hash(User.PasswordHash));
+            var refreshToken = GenerateRawRefreshToken();
+            var refreshTokenExpiresIn = DateTime.UtcNow.AddDays(jwtOptions.RefreshTokenLifeTime);
+            User.SetRefreshToken(refreshToken, refreshTokenExpiresIn);
+            await unitOfWork.Users.AddAsync(User);
             await unitOfWork.SaveChangesAsync();
-            var token = TokenHelper.CreateJWT(user, configuration, jwtOptions);
+            var token = TokenHelper.CreateJWT(User, configuration, jwtOptions);
 
             return new AuthResponse
             {
                 AccessToken = token,
-                ExpiresIn = DateTime.UtcNow.Add(jwtOptions.LifeTime)
+                JwtExpiresIn = DateTime.UtcNow.Add(jwtOptions.JwtLifeTime),
+                RefreshToken = refreshToken,
+                RefreshTokenExpiresIn = refreshTokenExpiresIn
             };
 
         }

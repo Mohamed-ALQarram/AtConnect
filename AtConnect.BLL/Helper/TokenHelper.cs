@@ -32,7 +32,7 @@ namespace AtConnect.BLL.Helper
                 Audience = JwtOptions.Audience,
                 Subject = new ClaimsIdentity(Claims),
                 SigningCredentials = SigningCredentials,
-                Expires = DateTime.UtcNow.Add(JwtOptions.LifeTime)
+                Expires = DateTime.UtcNow.Add(JwtOptions.JwtLifeTime)
             };
             var Token = JWTHandler.CreateToken(TokenDescriptor);
             var Key = JWTHandler.WriteToken(Token);
