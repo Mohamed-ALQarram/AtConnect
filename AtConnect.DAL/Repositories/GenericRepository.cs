@@ -1,5 +1,6 @@
 ﻿using AtConnect.Core.Interfaces;
 using AtConnect.DAL.Data;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,29 +17,29 @@ namespace AtConnect.DAL.Repositories
         {
             this.appDbContext = appDbContext;
         }
-        public Task AddAsync(T entity)
+        public async Task AddAsync(T entity)
         {
-            throw new NotImplementedException();
+            await appDbContext.AddAsync<T>(entity);
         }
 
         public void Delete(T entity)
         {
-            throw new NotImplementedException();
+           appDbContext.Set<T>().Remove(entity);
         }
 
         public IQueryable<T> GetAll()
         {
-            throw new NotImplementedException();
+            return appDbContext.Set<T>();
         }
 
-        public Task<T?> GetByKeysAsync(params object[] keys)
+        public async Task<T?> GetByKeysAsync(params object[] keys)
         {
-            throw new NotImplementedException();
+            return await appDbContext.Set<T>().FindAsync(keys);
         }
 
         public void Update(T entity)
         {
-            throw new NotImplementedException();
+            appDbContext.Set<T>().Update(entity);
         }
     }
 }

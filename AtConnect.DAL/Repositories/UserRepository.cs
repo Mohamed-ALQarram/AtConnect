@@ -1,6 +1,7 @@
 ﻿using AtConnect.Core.Interfaces;
 using AtConnect.Core.Models;
 using AtConnect.DAL.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace AtConnect.DAL.Repositories
 {
@@ -13,15 +14,20 @@ namespace AtConnect.DAL.Repositories
             this.appDbContext = appDbContext;
         }
 
-
-        public Task<AppUser?> GetByEmailAsync(string email)
+        public async Task<bool> CheckEmailAsync(string email)
         {
-            throw new NotImplementedException();
+            return await appDbContext.AppUsers.AnyAsync(u=>u.Email == email);
         }
 
-        public Task<AppUser?> GetByUserNameAsync(string username)
+        public async Task<bool> CheckUserNameAsync(string username)
         {
-            throw new NotImplementedException();
+            return await appDbContext.AppUsers.AnyAsync(u => u.UserName == username);
+        }
+
+        public async Task<AppUser?> GetByUserNameOrEmailAsync(string UserNameOrEmail)
+        {
+            if (string.IsNullOrWhiteSpace(UserNameOrEmail)) throw new ArgumentNullException("invalid UserName or Email");
+            return await appDbContext.AppUsers.FirstOrDefaultAsync(x=>x.UserName ==  UserNameOrEmail || x.Email == UserNameOrEmail);
         }
     }
 }

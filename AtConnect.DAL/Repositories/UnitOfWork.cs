@@ -1,29 +1,38 @@
 ﻿using AtConnect.Core.Interfaces;
+using AtConnect.DAL.Data;
 
 namespace AtConnect.DAL.Repositories
 {
     public class UnitOfWork : IUnitOfWork
     {
-        public IUserRepository Users => throw new NotImplementedException();
+        private readonly AppDbContext appDbContext;
 
-        public IChatRepository Chats => throw new NotImplementedException();
+        public IUserRepository Users {  get; private set; }
+        public IChatRepository Chats { get; private set; }
+        public IMessageRepository Messages { get; private set; }
+        public IChatRequestRepository ChatRequests { get; private set; }
+        public INotificationRepository Notifications { get; private set; }
+        public IDeviceTokenRepository DeviceTokens { get; private set; }
 
-        public IMessageRepository Messages => throw new NotImplementedException();
-
-        public IChatRequestRepository ChatRequests => throw new NotImplementedException();
-
-        public INotificationRepository Notifications => throw new NotImplementedException();
-
-        public IDeviceTokenRepository DeviceTokens => throw new NotImplementedException();
-
+        public UnitOfWork(AppDbContext appDbContext)
+        {
+            this.appDbContext = appDbContext;
+            Users = new UserRepository(appDbContext);
+            Chats = new ChatRepository(appDbContext);
+            ChatRequests = new ChatRequestRepository(appDbContext);
+            Messages = new MessageRepository(appDbContext);
+            Notifications = new NotificationRepository(appDbContext);
+            DeviceTokens = new DeviceTokenRepository(appDbContext);
+        }
         public void Dispose()
         {
-            throw new NotImplementedException();
+            appDbContext.Dispose();
+            GC.SuppressFinalize(this);
         }
 
-        public Task<int> SaveChangesAsync()
+        public async Task<int> SaveChangesAsync()
         {
-            throw new NotImplementedException();
+            return await appDbContext.SaveChangesAsync();
         }
     }
 }

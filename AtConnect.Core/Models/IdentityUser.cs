@@ -23,9 +23,9 @@ namespace AtConnect.Core.Models
         public string PasswordHash { get; private set; } = null!;
 
         public string? RefreshToken { get; private set; }
-        public DateTime? RefreshTokenExpiryTime { get; private set; }
+        public DateTime? RefreshTokenExpiryTime { get; private set; } = null;
         public string? PasswordResetToken { get; private set; }
-        public DateTime? ResetTokenExpires { get; private set; }
+        public DateTime? ResetTokenExpires { get; private set; } = null;
 
         public void ChangeEmail(string newEmail)
         {

@@ -9,22 +9,23 @@
         public bool IsActive { get; private set; }
 
         public ICollection<Chat> Chats { get; set; }
-        public ICollection<DeviceToken> DevcieTokens { get; set; }
+        public ICollection<DeviceToken> DeviceTokens { get; set; }
         private AppUser() 
         {
             Chats = new List<Chat>();
-            DevcieTokens = new List<DeviceToken>();
-            LastSeen = DateTime.Now;
+            DeviceTokens = new List<DeviceToken>();
+            //LastSeen = DateTime.Now;
+            LastSeen = DateTime.UtcNow;
         }
 
-        public AppUser(string FirstName, string LastName, string userName, string email, string passwordHash, string ImageURL) :base(userName, email, passwordHash)
+        public AppUser(string FirstName, string LastName, string userName, string email, string passwordHash, string ImageURL="") :base(userName, email, passwordHash)
         {
             this.FirstName = FirstName;
             this.LastName = LastName;
             this.ImageURL = ImageURL;
             Chats = new List<Chat>();
-            DevcieTokens = new List<DeviceToken>();
-            LastSeen = DateTime.Now;
+            DeviceTokens = new List<DeviceToken>();
+            LastSeen = DateTime.UtcNow;
         }
 
         public void ChangeFirstName(string newName)

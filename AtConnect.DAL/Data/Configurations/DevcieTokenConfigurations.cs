@@ -22,7 +22,7 @@ namespace AtConnect.DAL.Data.Configurations
                    .IsRequired();
 
             builder.HasOne(dt => dt.User)
-                   .WithMany(u => u.DevcieTokens)
+                   .WithMany(u => u.DeviceTokens)
                    .HasForeignKey(dt => dt.UserId)
                    .OnDelete(DeleteBehavior.Cascade);
 

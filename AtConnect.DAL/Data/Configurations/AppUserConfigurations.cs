@@ -25,7 +25,7 @@ namespace AtConnect.Core.Data.Configurations
             builder.Property(u => u.IsActive)
                    .IsRequired();
 
-            builder.HasMany(u => u.DevcieTokens)
+            builder.HasMany(u => u.DeviceTokens)
                    .WithOne(dt => dt.User)
                    .HasForeignKey(dt => dt.UserId)
                    .OnDelete(DeleteBehavior.Cascade);
