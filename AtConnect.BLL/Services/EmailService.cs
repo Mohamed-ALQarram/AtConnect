@@ -25,7 +25,7 @@ namespace AtConnect.BLL.Services
             _configuration = configuration;
         }
 
-        public async Task SendEmailAsync(SendEmailDTO sendEmailDTO)
+        public async Task SendEmailAsync(SendEmailRequest sendEmailDTO)
         {
             var email = new MimeMessage();
             email.From.Add(MailboxAddress.Parse(_emailSettings.Email));

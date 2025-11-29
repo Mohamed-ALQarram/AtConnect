@@ -26,13 +26,13 @@ namespace AtConnect.DAL.Data.Configurations
             builder.Property(u => u.RefreshToken)
                    .HasMaxLength(500);
 
-            builder.Property(u => u.PasswordResetToken)
+            builder.Property(u => u.VerifyToken)
                    .HasMaxLength(500);
 
             builder.Property(u => u.RefreshTokenExpiryTime)
                    .IsRequired(false);
 
-            builder.Property(u => u.ResetTokenExpires)
+            builder.Property(u => u.VerifyTokenExpires)
                    .IsRequired(false);
 
             builder.HasIndex(u => u.Email).IsUnique();

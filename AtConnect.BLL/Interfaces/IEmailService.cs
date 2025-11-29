@@ -9,6 +9,6 @@ namespace AtConnect.BLL.Interfaces
 {
     public interface IEmailService
     {
-        public Task SendEmailAsync(SendEmailDTO emailDTO);
+        public Task SendEmailAsync(SendEmailRequest emailDTO);
     }
 }

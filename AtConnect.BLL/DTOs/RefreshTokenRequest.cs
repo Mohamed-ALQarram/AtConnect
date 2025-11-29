@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace AtConnect.BLL.DTOs
 {
-    public class RefreshTokenDTO
+    public class RefreshTokenRequest
     {
         public string OldToken { get; set; } = string.Empty;
         public string RefreshToken { get; set; } = string.Empty;
