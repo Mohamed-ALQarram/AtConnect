@@ -30,7 +30,7 @@ namespace AtConnect.BLL.Services
             var email = new MimeMessage();
             email.From.Add(MailboxAddress.Parse(_emailSettings.Email));
             email.To.Add(MailboxAddress.Parse(sendEmailDTO.Email));
-            email.Subject = sendEmailDTO.subject;
+            email.Subject = sendEmailDTO.Subject;
 
             // Create a simple text body
             var builder = new BodyBuilder();

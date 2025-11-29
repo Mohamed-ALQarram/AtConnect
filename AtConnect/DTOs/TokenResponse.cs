@@ -7,11 +7,11 @@ namespace AtConnect.DTOs
         public bool Success { get; set; }
         public string Message { get; set; }=string.Empty;
         public TokenDTO Tokens { get; set; } = new TokenDTO();
-        public TokenResponse(bool success, string message, TokenDTO tokens)
+        public TokenResponse(bool success, string message, TokenDTO tokens) 
         {
-            Success = success;
+            Success= success;
             Message = message;
-            Tokens = tokens;
+            Tokens = tokens; 
         }
     }
 }

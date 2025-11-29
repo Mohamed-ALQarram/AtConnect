@@ -8,5 +8,5 @@ namespace AtConnect.BLL.DTOs
 {
     public record EmailVerificationRequest(string Email);
     public record ConfirmEmailVerificationRequest(string Email, string Token);
-    public record SendEmailRequest(string email, string subject, string htmlBody);
+    public record SendEmailRequest(string Email, string Subject, string HtmlBody);
 }
