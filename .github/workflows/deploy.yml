@@ -3,7 +3,7 @@ name: Deploy ASP.NET Core Web API to MonsterASP
 on:
   push:
     branches:
-      - master
+      - master  # الفرع اللي هينشر عنده
 
 jobs:
   build-and-deploy:
@@ -12,11 +12,13 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
 
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
       with:
-        dotnet-version: '8.0'  
+        dotnet-version: '8.0'
 
     - name: Restore dependencies
       run: dotnet restore
@@ -35,5 +37,5 @@ jobs:
         password: ${{ secrets.FTP_PASSWORD }}
         local-dir: ./publish
         server-dir: /wwwroot
-        protocol: ftp
-        port: 21
+        protocol: ftp    # مهم جداً لتجنب TLS error
+        port: 21         # FTP عادي
