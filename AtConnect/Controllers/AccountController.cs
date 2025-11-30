@@ -10,6 +10,7 @@ namespace AtConnect.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [AllowAnonymous]
     public class AccountController : ControllerBase
     {
         private readonly IAuthenticationService authenticationService;
@@ -18,13 +19,13 @@ namespace AtConnect.Controllers
         {
             this.authenticationService = authentication;
         }
-        [HttpPost("/Login")]
+        [HttpPost("Login")]
         public async Task<ActionResult<TokenResponse>> LogIn(LoginRequest LoginData)
         {
                 var Tokens = await authenticationService.LoginAsync(LoginData);
             return new TokenResponse(true, "Logged in Successfully.", Tokens);
         }
-        [HttpPost("/Register")]
+        [HttpPost("Register")]
         public async Task<ActionResult<ResponseDTO>> Register(RegistrationRequest registrationRequest)
         {
             var User = new AppUser(registrationRequest.FirstName, registrationRequest.LastName,
@@ -38,7 +39,7 @@ namespace AtConnect.Controllers
         }
 
   
-        [HttpPost("/Email/VerifyToken")]
+        [HttpPost("Email/VerifyToken")]
         public async Task<ActionResult<TokenResponse>> VerifyEmailToken(ConfirmEmailVerificationRequest verificationToken)
         {
             var AuthResponse = await authenticationService.VerifyEmailToken(verificationToken);
@@ -48,7 +49,7 @@ namespace AtConnect.Controllers
         }
 
 
-        [HttpPost("/ForgotPassword")]
+        [HttpPost("ForgotPassword")]
         public async Task<ActionResult<ResponseDTO>> ForgotPassword(EmailVerificationRequest verifyToken)
         {
             if (await authenticationService.ForgetPasswordAsync(verifyToken))
@@ -56,14 +57,14 @@ namespace AtConnect.Controllers
             return BadRequest(new ResponseDTO(false, "Invalid Mail"));
         }
 
-        [HttpPost("/VerifyResetToken")]
+        [HttpPost("VerifyResetToken")]
         public async Task<ActionResult<ResponseDTO>> VerifyResetToken(ConfirmEmailVerificationRequest verifyResetTokenDTO)
         {
             if (await authenticationService.VerifyTokenAsync(verifyResetTokenDTO)== null)
                     return BadRequest(new ResponseDTO(false,"Invalid or expired OTP."));
                 return new ResponseDTO(true, "OTP verified successfully. You can now reset your password.");
         }
-        [HttpPost("/ResetPassword")]
+        [HttpPost("ResetPassword")]
         public async Task<ActionResult<ResponseDTO>> ResetPassword(ResetPasswordRequest resetPasswordDTO)
         {
             if (await authenticationService.ResetPasswordAsync(resetPasswordDTO))
@@ -71,7 +72,7 @@ namespace AtConnect.Controllers
             return BadRequest(new ResponseDTO(false, "Invalid or expired OTP."));
         }
 
-        [HttpPost("/RefreshToken")]
+        [HttpPost("RefreshToken")]
         public async Task<ActionResult<TokenResponse>> RefreshToken(RefreshTokenRequest request)
         {
             var authResponse = await authenticationService.RefreshTokenAsync(request);

@@ -44,6 +44,16 @@ namespace AtConnect
                 var dbOptions = serviceProvider.GetRequiredService<IOptions<DatabaseOptions>>().Value;
                 options.UseNpgsql(dbOptions.AtConnectPostgresConnection);
             });
+            //Adding CROS
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowAll", policy =>
+                {
+                    policy.AllowAnyOrigin()
+                          .AllowAnyMethod()
+                          .AllowAnyHeader();
+                });
+            });
 
 
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
@@ -86,9 +96,12 @@ namespace AtConnect
             {
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "AtConnect API V1");
             });
-
+            app.UseCors("AllowAll");
             app.UseMiddleware<ExceptionMiddleware>();
             app.UseHttpsRedirection();
+
+            app.UseRouting(); 
+
             app.UseAuthentication();
             app.UseAuthorization();
 
