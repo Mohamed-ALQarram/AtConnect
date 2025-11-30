@@ -3,7 +3,7 @@ name: Deploy ASP.NET Core Web API to MonsterASP
 on:
   push:
     branches:
-      - master  
+      - master
 
 jobs:
   build-and-deploy:
