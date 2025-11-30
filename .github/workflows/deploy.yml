@@ -35,7 +35,7 @@ jobs:
         server: ${{ secrets.FTP_SERVER }}
         username: ${{ secrets.FTP_USERNAME }}
         password: ${{ secrets.FTP_PASSWORD }}
-        local-dir: ./publish
+        local-dir: ./publish/
         server-dir: /wwwroot
         protocol: ftp    # مهم جداً لتجنب TLS error
         port: 21         # FTP عادي
