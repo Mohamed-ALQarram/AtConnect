@@ -84,7 +84,6 @@ namespace AtConnect
                     options.TokenValidationParameters = TokenValidationParameters;      
                 }); 
             var app = builder.Build();
-
             // Configure the HTTP request pipeline.
             ////if (app.Environment.IsDevelopment())
             ////{
@@ -97,9 +96,9 @@ namespace AtConnect
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "AtConnect API V1");
             });
             app.UseCors("AllowAll");
-            app.UseMiddleware<ExceptionMiddleware>();
-            app.UseHttpsRedirection();
+            app.UseMiddleware<ErrorHandlingMiddleware>();
 
+            app.UseHttpsRedirection();
             app.UseRouting(); 
 
             app.UseAuthentication();

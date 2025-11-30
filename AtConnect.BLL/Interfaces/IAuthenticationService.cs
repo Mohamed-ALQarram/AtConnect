@@ -11,11 +11,11 @@ namespace AtConnect.BLL.Interfaces
 {
     public interface IAuthenticationService
     {
-        Task<bool> RegisterAsync(AppUser user);
-        Task<TokenDTO> LoginAsync(LoginRequest loginRequest);
-        Task<TokenDTO> RefreshTokenAsync(RefreshTokenRequest refreshTokenDRequest);
+        Task<ResultDTO<object>> RegisterAsync(RegistrationRequest user);
+        Task<ResultDTO<AuthResponse>> LoginAsync(LoginRequest loginRequest);
+        Task<ResultDTO<AuthResponse>> RefreshTokenAsync(RefreshTokenRequest refreshTokenDRequest);
         Task<bool> ForgetPasswordAsync(EmailVerificationRequest forgotPassRequest);
-        public  Task<TokenDTO> VerifyEmailToken(ConfirmEmailVerificationRequest verificationRequest);
+        public  Task<ResultDTO<AuthResponse>> VerifyEmailToken(ConfirmEmailVerificationRequest verificationRequest);
         Task<IdentityUser> VerifyTokenAsync(ConfirmEmailVerificationRequest ConfirmationRequest);
         Task<bool> ResetPasswordAsync(ResetPasswordRequest resetPassRequest);
     }

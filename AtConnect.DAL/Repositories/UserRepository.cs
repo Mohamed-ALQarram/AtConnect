@@ -16,12 +16,24 @@ namespace AtConnect.DAL.Repositories
 
         public async Task<bool> CheckEmailAsync(string email)
         {
+            if (string.IsNullOrWhiteSpace(email))
+                throw new ArgumentNullException("invalid UserName or Email");
+
             return await appDbContext.AppUsers.AnyAsync(u=>u.Email == email &&u.isEmailVerified==true);
         }
-
-        public async Task<bool> CheckUserNameAsync(string username)
+        public async Task<bool> CheckUserNameAsync(string UserName)
         {
-            return await appDbContext.AppUsers.AnyAsync(u => u.UserName == username && u.isEmailVerified == true);
+            if (string.IsNullOrWhiteSpace(UserName))
+                throw new ArgumentNullException("invalid UserName or Email");
+
+            return await appDbContext.AppUsers.AnyAsync(u => u.UserName == UserName);
+        }
+        public async Task<bool> CheckUnVerifiedEmailAsync(string Email)
+        {
+            if (string.IsNullOrWhiteSpace(Email))
+                throw new ArgumentNullException("invalid UserName or Email");
+
+            return await appDbContext.AppUsers.AnyAsync(u => u.Email == Email && u.isEmailVerified == false);
         }
 
         public async Task<AppUser?> GetByUserNameOrEmailAsync(string UserNameOrEmail)

@@ -1,4 +1,4 @@
-﻿namespace AtConnect.BLL.DTOs
+﻿namespace AtConnect.BLL.Helper
 {
         public static class EmailTemplates
         {

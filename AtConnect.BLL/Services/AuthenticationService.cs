@@ -33,25 +33,37 @@ namespace AtConnect.BLL.Services
             jwtOptions = JwtOptions.Value;
         }
 
-        public async Task<bool> RegisterAsync(AppUser User)
+        public async Task<ResultDTO<object>> RegisterAsync(RegistrationRequest registration)
         {
-            if (await unitOfWork.Users.CheckEmailAsync(User.Email)) throw new DuplicateWaitObjectException("This email already exists.");
-            if (await unitOfWork.Users.CheckUserNameAsync(User.UserName)) throw new DuplicateWaitObjectException("This UserName already exists.");
-
-            User.ChangePassword(PasswordHasher.Hash(User.PasswordHash));
-            User.EmailVerification(false);
+            bool unVerifiedEmail = false;
+            var User = new AppUser(registration.FirstName, registration.LastName, registration.UserName, registration.Email, registration.Password);
+                if (await unitOfWork.Users.CheckEmailAsync(User.Email)) return new (false ,"This email already exists.");
+            else if (await unitOfWork.Users.CheckUserNameAsync(User.UserName)) return new (false,"This UserName already exists.");
+            else 
+            {
+                // This block handles the scenario where the email exists but is still unverified.
+                // Instead of creating a new user record (which would violate the unique email constraint),
+                // we detect the unverified entry and simply resend a new OTP to that email.
+                unVerifiedEmail = await unitOfWork.Users.CheckUnVerifiedEmailAsync(User.Email);
+            }
 
             await SendTokenToEmailAsync(User);
-            await unitOfWork.Users.AddAsync(User);
+            if (!unVerifiedEmail) // avoid add user if it's already exist but not verified.
+            {
+                User.ChangePassword(PasswordHasher.Hash(User.PasswordHash));
+                User.EmailVerification(false);
+                await unitOfWork.Users.AddAsync(User);
+            }
+
             await unitOfWork.SaveChangesAsync();
 
-            return true;
+            return new (true, "The Verification code has been sent to your mail.");
         }
 
-        public async Task<TokenDTO> VerifyEmailToken(ConfirmEmailVerificationRequest verificationToken)
+        public async Task<ResultDTO<AuthResponse>> VerifyEmailToken(ConfirmEmailVerificationRequest verificationToken)
         {
             var User=  await VerifyTokenAsync(verificationToken);
-            if (User == null) return null!;
+            if (User == null) return new (false, "Invalid token", null);
             var refreshToken = GenerateRefreshToken();
             var refreshTokenExpiresIn = DateTime.UtcNow.AddDays(jwtOptions.RefreshTokenLifeTime);
             User.EmailVerification(true);
@@ -60,54 +72,58 @@ namespace AtConnect.BLL.Services
             await unitOfWork.SaveChangesAsync();
             var token = TokenHelper.CreateJWT(User, configuration, jwtOptions);
 
-            return new TokenDTO
+            var authResponse= new AuthResponse
             {
                 AccessToken = token,
-                JwtExpiresIn = DateTime.UtcNow.Add(jwtOptions.JwtLifeTime),
+                AccessTokenExpiresAt  = DateTime.UtcNow.Add(jwtOptions.JwtLifeTime),
                 TokenType= "Bearer",
                 RefreshToken = refreshToken,
-                RefreshTokenExpiresIn = refreshTokenExpiresIn
+                RefreshTokenExpiresAt  = refreshTokenExpiresIn
             };
+            return new ResultDTO<AuthResponse>(true, "Your account verified successfully.", authResponse);
         }
-        public async Task<TokenDTO> LoginAsync(LoginRequest loginRequest)
+        public async Task<ResultDTO<AuthResponse>> LoginAsync(LoginRequest loginRequest)
         {
             var User = await unitOfWork.Users.GetByUserNameOrEmailAsync(loginRequest.UserNameOrEmail);
-            if (User == null || !User.isEmailVerified || !PasswordHasher.Verify(loginRequest.PasswordHash, User.PasswordHash)) 
-                    throw new UnauthorizedAccessException("Invalid user name or password.");
+            if (User == null || !User.isEmailVerified || !PasswordHasher.Verify(loginRequest.Password, User.PasswordHash))
+                return new(false, "Invalid UserName or password.");
             var token = TokenHelper.CreateJWT(User, configuration, jwtOptions);
 
-            return new TokenDTO
+            var authResponse= new AuthResponse
             {
                 AccessToken = token,
-                JwtExpiresIn = DateTime.UtcNow.Add(jwtOptions.JwtLifeTime),
+                AccessTokenExpiresAt  = DateTime.UtcNow.Add(jwtOptions.JwtLifeTime),
                 RefreshToken = User.RefreshToken??"",
-                RefreshTokenExpiresIn= User.RefreshTokenExpiryTime?? DateTime.UtcNow
+                RefreshTokenExpiresAt = User.RefreshTokenExpiryTime?? DateTime.UtcNow
             };
-
+            return new ResultDTO<AuthResponse>(true,"Logged in Successfully." ,authResponse );    
         }
 
-        public async Task<TokenDTO> RefreshTokenAsync(RefreshTokenRequest refreshTokenDRequest)
+        public async Task<ResultDTO<AuthResponse>> RefreshTokenAsync(RefreshTokenRequest refreshTokenDRequest)
         {
-            var Principal= GetPrincipalFromExpiredToken(refreshTokenDRequest.OldToken);
+            var Principal = GetPrincipalFromExpiredToken(refreshTokenDRequest.OldToken);
+            if (Principal == null)
+                return new(false, "Invalid access token.", null);
             int.TryParse(Principal.FindFirst(ClaimTypes.NameIdentifier)?.Value, out int userId);
-            if(userId ==0) throw new SecurityTokenException("Invalid token");
 
+            if (userId ==0) return new(false, "Invalid access token.",null);
             var user = await unitOfWork.Users.GetByKeysAsync(userId);
             if (user == null || user.RefreshToken!= refreshTokenDRequest.RefreshToken ||user.RefreshTokenExpiryTime <= DateTime.UtcNow)
-                return null!;
+                return new(false, "Invalid refresh token.", null);
             var newAccessToken = TokenHelper.CreateJWT(user, configuration, jwtOptions);
             var newRefreshToken = GenerateRefreshToken();
             var RefreshTokenExpireDate = DateTime.UtcNow.AddDays(jwtOptions.RefreshTokenLifeTime);
             user.SetRefreshToken(newRefreshToken, RefreshTokenExpireDate);
             await unitOfWork.SaveChangesAsync();
-            return new TokenDTO
+            var authResponse = new AuthResponse
             {
                 AccessToken = newAccessToken,
                 RefreshToken = newRefreshToken,
                 TokenType = "Bearer",
-                JwtExpiresIn =DateTime.UtcNow.Add(jwtOptions.JwtLifeTime) ,
-                RefreshTokenExpiresIn = RefreshTokenExpireDate
+                AccessTokenExpiresAt  =DateTime.UtcNow.Add(jwtOptions.JwtLifeTime) ,
+                RefreshTokenExpiresAt  = RefreshTokenExpireDate
             };
+            return new(true, null!, authResponse);
         }
         private string GenerateRefreshToken()
         {
@@ -146,7 +162,7 @@ namespace AtConnect.BLL.Services
             var principal = tokenHandler.ValidateToken(token, validationParameters, out SecurityToken securityToken);
 
             if (securityToken is not JwtSecurityToken jwtSecurityToken)
-                throw new SecurityTokenException("Invalid token");
+                return null!;
 
             return principal;
         }
@@ -161,15 +177,8 @@ namespace AtConnect.BLL.Services
             }
             var otp = OtpGenerator.GenerateSecureOtp();
             User.SetVerifyToken(otp, DateTime.UtcNow.AddMinutes(10));
-            try
-            {
+            
                 await emailService.SendEmailAsync(new SendEmailRequest(User.Email, EmailTemplates.OtpSubject, EmailTemplates.GetOtpBody(otp)));
-            }
-            catch (Exception ex)
-            {
-                // log error
-                Console.WriteLine(ex.Message);
-            }
 
             return true;
         }
