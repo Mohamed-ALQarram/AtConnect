@@ -15,6 +15,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Text;
+using AtConnect.SignalR_Hubs;
 
 namespace AtConnect
 {
@@ -35,6 +36,12 @@ namespace AtConnect
             // Add services to the container.
 
             builder.Services.AddControllers();
+
+            //Adding SignalR
+            builder.Services.AddSignalR();
+            builder.Services.AddSingleton<IUserConnectionManager, InMemoryUserConnectionManager>();
+            
+
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
@@ -104,8 +111,9 @@ namespace AtConnect
             app.UseAuthentication();
             app.UseAuthorization();
 
-
             app.MapControllers();
+            app.MapHub<AtConnectHub>("/AtConnectHub"); 
+
 
             app.Run();
         }
