@@ -63,17 +63,26 @@ namespace AtConnect
             builder.Services.AddScoped<IChatService, ChatService>();
                 
 
+
             var JwtOptions = builder.Configuration.GetSection("AtConnect:Jwt").Get<JwtOptions>();
+            
+            // Validate JWT configuration is loaded properly
+            if (JwtOptions == null || string.IsNullOrEmpty(JwtOptions.SigningKey))
+            {
+                throw new InvalidOperationException(
+                    "JWT configuration is missing or invalid. Ensure 'AtConnect:Jwt:SigningKey' is configured in appsettings.json or environment variables.");
+            }
+            
             var TokenValidationParameters = new TokenValidationParameters
             {
                 ValidateIssuer = false,
-                ValidIssuer = JwtOptions?.Issuer,
+                ValidIssuer = JwtOptions.Issuer,
 
                 ValidateAudience = false,
-                ValidAudience = JwtOptions?.Audience,
+                ValidAudience = JwtOptions.Audience,
 
                 ValidateIssuerSigningKey = true,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(JwtOptions?.SigningKey ?? "")),
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(JwtOptions.SigningKey)),
                 RequireExpirationTime = false,
                 ValidateLifetime = true
 
