@@ -11,12 +11,12 @@ namespace AtConnect.BLL.DTOs
 
         public bool Success { get;  }
         public T? Data { get;  } = default;
-        public string? ErrorMessage { get; }
+        public string? Message { get; }
 
-        public ResultDTO(bool success =false, string error=null!, T? data = default)
+        public ResultDTO(bool success =false, string? error=null, T? data = default)
         {
             Success = success;
-            ErrorMessage = error;
+            Message = error;
             Data = data;
         }
     }

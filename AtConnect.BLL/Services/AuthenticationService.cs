@@ -123,7 +123,7 @@ namespace AtConnect.BLL.Services
                 AccessTokenExpiresAt  =DateTime.UtcNow.Add(jwtOptions.JwtLifeTime) ,
                 RefreshTokenExpiresAt  = RefreshTokenExpireDate
             };
-            return new(true, null!, authResponse);
+            return new(true, "Token has been refreshed successfully.", authResponse);
         }
         private string GenerateRefreshToken()
         {
