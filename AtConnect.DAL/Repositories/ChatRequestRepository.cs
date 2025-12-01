@@ -1,6 +1,10 @@
-﻿using AtConnect.Core.Interfaces;
+﻿using AtConnect.Core.Enum;
+using AtConnect.Core.Interfaces;
 using AtConnect.Core.Models;
+using AtConnect.Core.SharedDTOs;
 using AtConnect.DAL.Data;
+using Microsoft.EntityFrameworkCore;
+using System.Security.Cryptography.X509Certificates;
 
 namespace AtConnect.DAL.Repositories
 {
@@ -13,14 +17,27 @@ namespace AtConnect.DAL.Repositories
             this.appDbContext = appDbContext;
         }
 
-        public Task<ChatRequest?> GetExistingRequestAsync(int senderId, int receiverId)
+        public async Task<List<ChatRequestDTO>> GetPendingRequestAsync(int receiverId, int page=1, int pageSize=10)
         {
-            throw new NotImplementedException();
+            return await appDbContext.ChatRequests
+                .Where(x=> x.ReceiverId == receiverId &&
+                    x.Status == RequestStatus.Pending)
+                .Skip((page -1 )*pageSize)
+                .Include(x => x.Sender)
+                .Include(x => x.Receiver)
+                .Take(pageSize)
+                .Select(x => new ChatRequestDTO
+                ( x.Id, x.SenderId, $"{x.Sender.FirstName}  {x.Sender.LastName}", x.Sender.ImageURL??"",0)).ToListAsync();
         }
-
-        public Task<IEnumerable<ChatRequest>> GetPendingRequestsAsync(int userId)
+        
+        public async Task<bool> ChangeRequestStatusAsync(int RequestId, RequestStatus newStatus)
         {
-            throw new NotImplementedException();
+            var result =await appDbContext.ChatRequests
+                .Where(x=>x.Id == RequestId)
+                .ExecuteUpdateAsync(setter => setter.SetProperty(x => x.Status, newStatus));
+            if (result > 0)
+                return true;
+            return false;
         }
     }
 }

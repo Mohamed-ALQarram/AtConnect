@@ -1,5 +1,7 @@
-﻿using AtConnect.Core.Interfaces;
+﻿using AtConnect.Core.Enum;
+using AtConnect.Core.Interfaces;
 using AtConnect.Core.Models;
+using AtConnect.Core.SharedDTOs;
 using AtConnect.DAL.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -24,13 +26,31 @@ namespace AtConnect.DAL.Repositories
                                           (c.User1Id == userBId && c.User2Id == userAId));
         }
 
-        public async Task<IEnumerable<Chat>> GetUserChatsAsync(int userId)
+        public async Task<IEnumerable<UserChatDTO>> GetUserChatsAsync(int userId, int page, int pageSize)
         {
-            return await appDbContext.Chats
+             return await appDbContext.Chats
                 .Include(c => c.User1)
                 .Include(c => c.User2)
-                .Include(c => c.Messages)
                 .Where(c => c.User1Id == userId || c.User2Id == userId)
+                .Skip((page-1) * pageSize)
+                .Take(pageSize)
+                    .Select(c => new 
+                    {
+                        OtherUser = c.User1Id == userId ? c.User2 : c.User1,
+                        MostRecentMessage = c.Messages
+                             .OrderByDescending(m => m.SentAt)
+                             .FirstOrDefault() ?? new Message(0,0,""),
+                        UnreadMessageCount = c.Messages
+                             .Count(m => m.Status != MessageStatus.Seen && m.SenderId != userId)
+                    })
+    .               OrderByDescending(c => c.MostRecentMessage!.SentAt)
+                    .Select(c => new UserChatDTO(
+                        c.OtherUser.Id,
+                        c.OtherUser.ImageURL,
+                        c.OtherUser.IsActive,
+                        c.MostRecentMessage.Content, 
+                        c.MostRecentMessage.SentAt, 
+                        c.UnreadMessageCount))
                 .ToListAsync();
         }
     }

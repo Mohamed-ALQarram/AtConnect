@@ -1,6 +1,7 @@
 ﻿using AtConnect.Core.Interfaces;
 using AtConnect.Core.Models;
 using AtConnect.DAL.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace AtConnect.DAL.Repositories
 {
@@ -13,10 +14,18 @@ namespace AtConnect.DAL.Repositories
             this.appDbContext = appDbContext;
         }
 
-
-        public Task<IEnumerable<Message>> GetMessagesForChatAsync(int chatId, int count = 50)
+        public async Task AddRangeMessagesAsync(List<Message> messages)
         {
-            throw new NotImplementedException();
+            if (messages != null && messages.Count != 0)
+                await appDbContext.Messages.AddRangeAsync(messages);
         }
+        public async Task<IEnumerable<Message>> GetChatMessagesAsync(int chatId, int page = 1, int pageSize = 50)
+        {
+            return  await appDbContext.Messages.Where(msg=> msg.ChatId == chatId)
+                .Skip((page-1) *pageSize)
+                .Take(pageSize)
+                .OrderByDescending(msg=>msg.SentAt).ToListAsync();
+        }
+
     }
 }

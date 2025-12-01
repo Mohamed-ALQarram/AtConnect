@@ -1,11 +1,14 @@
-﻿using AtConnect.Core.Models;
+﻿using AtConnect.Core.Enum;
+using AtConnect.Core.Models;
+using AtConnect.Core.SharedDTOs;
 
 namespace AtConnect.Core.Interfaces
 {
     public interface IChatRequestRepository : IGenericRepository<ChatRequest>
     {
-        Task<ChatRequest?> GetExistingRequestAsync(int senderId, int receiverId);
-        Task<IEnumerable<ChatRequest>> GetPendingRequestsAsync(int userId);
+        public Task<List<ChatRequestDTO>> GetPendingRequestAsync(int receiverId, int page, int pageSize);
+
+        public Task<bool> ChangeRequestStatusAsync(int RequestId, RequestStatus newStatus);
     }
 
 }
