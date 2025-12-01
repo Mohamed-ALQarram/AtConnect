@@ -5,7 +5,7 @@ using AtConnect.BLL.Services;
 using AtConnect.Core.Interfaces;
 using AtConnect.DAL.Data;
 using AtConnect.DAL.Repositories;
-using AtConnect.Middleware;
+using AtConnect.Middlewares;
 using AtConnect.SignalR_Hubs;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -94,8 +94,6 @@ namespace AtConnect
             ////    app.UseSwaggerUI();
             ////}
             ///
-            var databaseConn = new DatabaseOptions().AtConnectSqlServerConnection;
-
             app.UseSwagger();
             app.UseSwaggerUI(c =>
             {

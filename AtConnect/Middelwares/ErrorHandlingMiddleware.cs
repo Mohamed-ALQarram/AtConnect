@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
 
-namespace AtConnect.Middleware
+namespace AtConnect.Middlewares
 {
     public class ErrorHandlingMiddleware
     {

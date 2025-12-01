@@ -1,7 +1,7 @@
 ﻿using AtConnect.DTOs;
 using System.Text.Json;
 
-namespace AtConnect.Middleware
+namespace AtConnect.Middlewares
 {
     public class ResponseWrappingMiddleware
     {
