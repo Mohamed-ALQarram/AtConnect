@@ -24,11 +24,8 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore
 
-    - name: Build
-      run: dotnet build --configuration Release --no-restore
-
     - name: Publish
-      run: dotnet publish -c Release -o ./publish
+      run: dotnet publish ./AtConnect.API/AtConnect.API.csproj -c Release -o ./publish -r win-x86 --self-contained true
 
     - name: Deploy to MonsterASP.NET via FTP
       uses: SamKirkland/FTP-Deploy-Action@4.3.0
@@ -37,6 +34,8 @@ jobs:
         username: ${{ secrets.FTP_USERNAME }}
         password: ${{ secrets.FTP_PASSWORD }}
         local-dir: ./publish/
-        server-dir: /wwwroot/
-        protocol: ftp    # مهم جداً لتجنب TLS error
-        port: 21         # FTP عادي
+        server-dir: /wwwroot/  #
+        protocol: ftp
+        port: 21
+        
+        dangerous-clean-files: true
