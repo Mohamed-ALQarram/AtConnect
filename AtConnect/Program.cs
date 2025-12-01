@@ -1,21 +1,17 @@
 
 using AtConnect.BLL.Interfaces;
+using AtConnect.BLL.Options;
 using AtConnect.BLL.Services;
 using AtConnect.Core.Interfaces;
 using AtConnect.DAL.Data;
 using AtConnect.DAL.Repositories;
 using AtConnect.Middleware;
-using AtConnect.BLL.Options;
+using AtConnect.SignalR_Hubs;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption;
-
-//using Microsoft.Extensions.Configuration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using System;
 using System.Text;
-using AtConnect.SignalR_Hubs;
 
 namespace AtConnect
 {
@@ -24,14 +20,12 @@ namespace AtConnect
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+
             builder.Services.Configure<JwtOptions>(
                 builder.Configuration.GetSection("AtConnect:Jwt"));
             builder.Services.Configure<DatabaseOptions>(
-                builder.Configuration.GetSection("ConnectionStrings"));
+                builder.Configuration.GetSection("AtConnect:Database"));
             builder.Services.Configure<SmtpOptions>(builder.Configuration.GetSection("AtConnect:Smtp"));
-            var configuration = builder.Configuration
-                .AddEnvironmentVariables()
-                .Build();
 
             // Add services to the container.
 
@@ -99,6 +93,9 @@ namespace AtConnect
             ////    app.UseSwagger();
             ////    app.UseSwaggerUI();
             ////}
+            ///
+            var databaseConn = new DatabaseOptions().AtConnectSqlServerConnection;
+
             app.UseSwagger();
             app.UseSwaggerUI(c =>
             {
