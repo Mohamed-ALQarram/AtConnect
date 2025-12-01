@@ -49,7 +49,7 @@ namespace AtConnect
             builder.Services.AddDbContext<AppDbContext>((serviceProvider, options) =>
             {
                 var dbOptions = serviceProvider.GetRequiredService<IOptions<DatabaseOptions>>().Value;
-                options.UseNpgsql(dbOptions.AtConnectPostgresConnection);
+                options.UseSqlServer(dbOptions.AtConnectSqlServerConnection);
             });
             //Adding CROS
             builder.Services.AddCors(options =>
@@ -66,6 +66,8 @@ namespace AtConnect
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
             builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
             builder.Services.AddScoped<IEmailService, EmailService>();
+            builder.Services.AddScoped<IChatService, ChatService>();
+                
 
             var JwtOptions = builder.Configuration.GetSection("AtConnect:Jwt").Get<JwtOptions>();
             var TokenValidationParameters = new TokenValidationParameters

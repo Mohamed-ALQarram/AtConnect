@@ -2,6 +2,6 @@
 {
     public class DatabaseOptions
     {
-        public string AtConnectPostgresConnection { get; set; } = string.Empty;
+        public string AtConnectSqlServerConnection { get; set; } = string.Empty;
     }
 }

@@ -3,16 +3,16 @@ using System;
 using AtConnect.DAL.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
 namespace AtConnect.DAL.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251126183320_Initial")]
+    [Migration("20251201145622_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -20,30 +20,30 @@ namespace AtConnect.DAL.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.11")
-                .HasAnnotation("Relational:MaxIdentifierLength", 63);
+                .HasAnnotation("ProductVersion", "8.0.22")
+                .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
-            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("AtConnect.DAL.Models.Chat", b =>
+            modelBuilder.Entity("AtConnect.Core.Models.Chat", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int?>("AppUserId")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetime2");
 
                     b.Property<int>("User1Id")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<int>("User2Id")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -56,25 +56,25 @@ namespace AtConnect.DAL.Migrations
                     b.ToTable("Chats");
                 });
 
-            modelBuilder.Entity("AtConnect.DAL.Models.ChatRequest", b =>
+            modelBuilder.Entity("AtConnect.Core.Models.ChatRequest", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetime2");
 
                     b.Property<int>("ReceiverId")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<int>("SenderId")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<int>("Status")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -85,27 +85,27 @@ namespace AtConnect.DAL.Migrations
                     b.ToTable("ChatRequests");
                 });
 
-            modelBuilder.Entity("AtConnect.DAL.Models.DevcieToken", b =>
+            modelBuilder.Entity("AtConnect.Core.Models.DeviceToken", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetime2");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
+                        .HasColumnType("bit");
 
                     b.Property<string>("Token")
                         .IsRequired()
                         .HasMaxLength(512)
-                        .HasColumnType("character varying(512)");
+                        .HasColumnType("nvarchar(512)");
 
                     b.Property<int>("UserId")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -117,47 +117,50 @@ namespace AtConnect.DAL.Migrations
                     b.ToTable("DevcieTokens");
                 });
 
-            modelBuilder.Entity("AtConnect.DAL.Models.IdentityUser", b =>
+            modelBuilder.Entity("AtConnect.Core.Models.IdentityUser", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Discriminator")
                         .IsRequired()
                         .HasMaxLength(13)
-                        .HasColumnType("character varying(13)");
+                        .HasColumnType("nvarchar(13)");
 
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(254)
-                        .HasColumnType("character varying(254)");
+                        .HasColumnType("nvarchar(254)");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
-
-                    b.Property<string>("PasswordResetToken")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<string>("RefreshToken")
                         .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<DateTime?>("RefreshTokenExpiryTime")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime?>("ResetTokenExpires")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("UserName")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("VerifyToken")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime?>("VerifyTokenExpires")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("isEmailVerified")
+                        .HasColumnType("bit");
 
                     b.HasKey("Id");
 
@@ -174,30 +177,30 @@ namespace AtConnect.DAL.Migrations
                     b.UseTphMappingStrategy();
                 });
 
-            modelBuilder.Entity("AtConnect.DAL.Models.Message", b =>
+            modelBuilder.Entity("AtConnect.Core.Models.Message", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("ChatId")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<string>("Content")
                         .IsRequired()
                         .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)");
+                        .HasColumnType("nvarchar(2000)");
 
                     b.Property<int>("SenderId")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("SentAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetime2");
 
                     b.Property<int>("Status")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -208,30 +211,30 @@ namespace AtConnect.DAL.Migrations
                     b.ToTable("Messages");
                 });
 
-            modelBuilder.Entity("AtConnect.DAL.Models.Notification", b =>
+            modelBuilder.Entity("AtConnect.Core.Models.Notification", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetime2");
 
                     b.Property<bool>("IsRead")
-                        .HasColumnType("boolean");
+                        .HasColumnType("bit");
 
                     b.Property<string>("Message")
                         .IsRequired()
                         .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<int>("Type")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<int>("UserId")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -240,44 +243,50 @@ namespace AtConnect.DAL.Migrations
                     b.ToTable("Notifications");
                 });
 
-            modelBuilder.Entity("AtConnect.DAL.Models.AppUser", b =>
+            modelBuilder.Entity("AtConnect.Core.Models.AppUser", b =>
                 {
-                    b.HasBaseType("AtConnect.DAL.Models.IdentityUser");
+                    b.HasBaseType("AtConnect.Core.Models.IdentityUser");
+
+                    b.Property<string>("AboutUser")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("FirstName")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("ImageURL")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
+                        .HasColumnType("bit");
 
                     b.Property<string>("LastName")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<DateTime>("LastSeen")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetime2");
 
                     b.ToTable("Users", (string)null);
 
                     b.HasDiscriminator().HasValue("AppUser");
                 });
 
-            modelBuilder.Entity("AtConnect.DAL.Models.Chat", b =>
+            modelBuilder.Entity("AtConnect.Core.Models.Chat", b =>
                 {
-                    b.HasOne("AtConnect.DAL.Models.AppUser", null)
+                    b.HasOne("AtConnect.Core.Models.AppUser", null)
                         .WithMany("Chats")
                         .HasForeignKey("AppUserId");
 
-                    b.HasOne("AtConnect.DAL.Models.AppUser", "User1")
+                    b.HasOne("AtConnect.Core.Models.AppUser", "User1")
                         .WithMany()
                         .HasForeignKey("User1Id")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.HasOne("AtConnect.DAL.Models.AppUser", "User2")
+                    b.HasOne("AtConnect.Core.Models.AppUser", "User2")
                         .WithMany()
                         .HasForeignKey("User2Id")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -288,15 +297,15 @@ namespace AtConnect.DAL.Migrations
                     b.Navigation("User2");
                 });
 
-            modelBuilder.Entity("AtConnect.DAL.Models.ChatRequest", b =>
+            modelBuilder.Entity("AtConnect.Core.Models.ChatRequest", b =>
                 {
-                    b.HasOne("AtConnect.DAL.Models.AppUser", "Receiver")
+                    b.HasOne("AtConnect.Core.Models.AppUser", "Receiver")
                         .WithMany()
                         .HasForeignKey("ReceiverId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.HasOne("AtConnect.DAL.Models.AppUser", "Sender")
+                    b.HasOne("AtConnect.Core.Models.AppUser", "Sender")
                         .WithMany()
                         .HasForeignKey("SenderId")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -307,10 +316,10 @@ namespace AtConnect.DAL.Migrations
                     b.Navigation("Sender");
                 });
 
-            modelBuilder.Entity("AtConnect.DAL.Models.DevcieToken", b =>
+            modelBuilder.Entity("AtConnect.Core.Models.DeviceToken", b =>
                 {
-                    b.HasOne("AtConnect.DAL.Models.AppUser", "User")
-                        .WithMany("DevcieTokens")
+                    b.HasOne("AtConnect.Core.Models.AppUser", "User")
+                        .WithMany("DeviceTokens")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -318,15 +327,15 @@ namespace AtConnect.DAL.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("AtConnect.DAL.Models.Message", b =>
+            modelBuilder.Entity("AtConnect.Core.Models.Message", b =>
                 {
-                    b.HasOne("AtConnect.DAL.Models.Chat", "Chat")
+                    b.HasOne("AtConnect.Core.Models.Chat", "Chat")
                         .WithMany("Messages")
                         .HasForeignKey("ChatId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("AtConnect.DAL.Models.AppUser", "Sender")
+                    b.HasOne("AtConnect.Core.Models.AppUser", "Sender")
                         .WithMany()
                         .HasForeignKey("SenderId")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -337,9 +346,9 @@ namespace AtConnect.DAL.Migrations
                     b.Navigation("Sender");
                 });
 
-            modelBuilder.Entity("AtConnect.DAL.Models.Notification", b =>
+            modelBuilder.Entity("AtConnect.Core.Models.Notification", b =>
                 {
-                    b.HasOne("AtConnect.DAL.Models.AppUser", "User")
+                    b.HasOne("AtConnect.Core.Models.AppUser", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -348,16 +357,16 @@ namespace AtConnect.DAL.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("AtConnect.DAL.Models.Chat", b =>
+            modelBuilder.Entity("AtConnect.Core.Models.Chat", b =>
                 {
                     b.Navigation("Messages");
                 });
 
-            modelBuilder.Entity("AtConnect.DAL.Models.AppUser", b =>
+            modelBuilder.Entity("AtConnect.Core.Models.AppUser", b =>
                 {
                     b.Navigation("Chats");
 
-                    b.Navigation("DevcieTokens");
+                    b.Navigation("DeviceTokens");
                 });
 #pragma warning restore 612, 618
         }
