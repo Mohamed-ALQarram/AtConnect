@@ -43,7 +43,7 @@ namespace AtConnect.DAL.Repositories
                         UnreadMessageCount = c.Messages
                              .Count(m => m.Status != MessageStatus.Seen && m.SenderId != userId)
                     })
-    .               OrderByDescending(c => c.MostRecentMessage!.SentAt)
+                    .OrderByDescending(c => c.MostRecentMessage.SentAt)
                     .Select(c => new UserChatDTO(
                         c.OtherUser.Id,
                         c.OtherUser.ImageURL,
