@@ -30,7 +30,7 @@ namespace AtConnect.Controllers
             return Result;
         }
         [HttpPost("Register")]
-        public async Task<ActionResult<ResultDTO<Object>>> Register(RegistrationRequest registrationRequest)
+        public async Task<ActionResult<ResultDTO<RegistrationRequest>>> Register(RegistrationRequest registrationRequest)
         {
 
             var result = await authenticationService.RegisterAsync(registrationRequest);
