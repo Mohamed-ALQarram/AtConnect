@@ -21,6 +21,12 @@ namespace AtConnect
         {
             var builder = WebApplication.CreateBuilder(args);
 
+
+           
+
+
+
+            builder.Configuration.AddEnvironmentVariables().Build();
             builder.Services.Configure<JwtOptions>(
                 builder.Configuration.GetSection("AtConnect:Jwt"));
             builder.Services.Configure<DatabaseOptions>(
@@ -61,7 +67,12 @@ namespace AtConnect
             builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
             builder.Services.AddScoped<IEmailService, EmailService>();
             builder.Services.AddScoped<IChatService, ChatService>();
-                
+            builder.Services.AddScoped<IRequestService,RequestService >();
+            builder.Services.AddScoped<IUserService, UserService>();
+            builder.Services.AddScoped<IChatRequestRepository, ChatRequestRepository>();
+            builder.Services.AddScoped<IUserRepository, UserRepository>();
+            builder.Services.AddScoped<INotificationService, NotificationService>();
+            builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 
 
             var JwtOptions = builder.Configuration.GetSection("AtConnect:Jwt").Get<JwtOptions>();
