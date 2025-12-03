@@ -9,6 +9,7 @@
         public bool IsActive { get; private set; }
         public string? AboutUser { get; private set; }
         public ICollection<Chat> Chats { get; set; }
+        public ICollection<ChatRequest>? ChatRequests { get; set; }
         public ICollection<DeviceToken> DeviceTokens { get; set; }
         private AppUser() 
         {
