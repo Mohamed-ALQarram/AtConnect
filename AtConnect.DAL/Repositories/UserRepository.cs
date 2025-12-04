@@ -1,7 +1,9 @@
-﻿using AtConnect.Core.Interfaces;
+﻿using AtConnect.BLL.DTOs;
+using AtConnect.Core.Interfaces;
 using AtConnect.Core.Models;
 using AtConnect.DAL.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Internal;
 
 namespace AtConnect.DAL.Repositories
 {
@@ -40,6 +42,32 @@ namespace AtConnect.DAL.Repositories
         {
             if (string.IsNullOrWhiteSpace(UserNameOrEmail)) throw new ArgumentNullException("invalid UserName or Email");
             return await appDbContext.AppUsers.FirstOrDefaultAsync(x=>x.UserName ==  UserNameOrEmail || x.Email == UserNameOrEmail);
+        }
+
+        public async Task<List<UserListItemDto>> GetUsersAsync(int currentUserId, int page, int pageSize)
+        {
+            var query =
+                from user in GetAll()
+                where user.Id != currentUserId
+                select new UserListItemDto
+                {
+                    Id = user.Id,
+                    FullName = $"{user.FirstName} {user.LastName}",
+                    ProfilePhotoUrl = user.ImageURL?? "",
+                    isActive = user.IsActive,
+                    //left join logic:
+                    ChatRequest = user.ChatRequests!
+                        .FirstOrDefault(cr =>
+                               (cr.SenderId == currentUserId && cr.ReceiverId == user.Id)
+                            || (cr.ReceiverId == currentUserId && cr.SenderId == user.Id))
+                };
+
+            // 3) Apply pagination in memory
+            var paged = query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+            return await paged;
         }
     }
 }

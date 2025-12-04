@@ -17,39 +17,20 @@ namespace AtConnect.BLL.Services
 {
     public class UserService : IUserService
     {
-        private readonly IUserRepository _userRepo;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public UserService(IUserRepository userRepo)
+        public UserService(IUnitOfWork unitOfWork)
         {
-            _userRepo = userRepo ;
+            _unitOfWork = unitOfWork;
         }
+
         public async Task<ResultDTO<List<UserListItemDto>>> GetUsersAsync(int currentUserId, int page, int pageSize)
         {
-            if (page < 1) page = 1;
-            if (pageSize < 1) pageSize = 20;
+            if (page < 1) return new (false, "Invalid page number", null);
+            if (pageSize < 1) return new(false, "Invalid page size", null);
+            var UsersPage= await _unitOfWork.Users.GetUsersAsync(currentUserId, page, pageSize);
 
-            // 1) Retrieve all users (IGenericRepository commonly exposes GetAllAsync)
-            var allUsers =  _userRepo.GetAll(); // <--- typical method on many generic repos
-
-            // 2) Filter out the current user
-            var others = allUsers
-                .Where(u => u.Id != currentUserId)
-                
-                .ToList();
-
-            // 3) Apply pagination in memory
-            var paged = others
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .Select(u => new UserListItemDto
-                {
-                    Id = u.Id,
-                    FullName = (u.FirstName + " " + u.LastName).Trim(),
-                    ProfilePhotoUrl = u.ImageURL ?? string.Empty
-                })
-                .ToList();
-
-            return new ResultDTO<List<UserListItemDto>>(true, "Users retrieved successfully", paged);
+            return new ResultDTO<List<UserListItemDto>>(true, "Users retrieved successfully", UsersPage);
         }
 
        

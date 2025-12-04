@@ -1,4 +1,5 @@
-﻿using AtConnect.Core.Models;
+﻿using AtConnect.BLL.DTOs;
+using AtConnect.Core.Models;
 
 namespace AtConnect.Core.Interfaces
 {
@@ -8,7 +9,7 @@ namespace AtConnect.Core.Interfaces
         Task<bool> CheckUserNameAsync(string UserName);
         Task<bool> CheckUnVerifiedEmailAsync(string Email);
         Task<AppUser?> GetByUserNameOrEmailAsync(string UserNameOrEmail);
-        
+        public  Task<List<UserListItemDto>> GetUsersAsync(int currentUserId, int page, int pageSize);
     }
 
 }
