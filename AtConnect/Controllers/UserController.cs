@@ -4,7 +4,7 @@ using AtConnect.DTOs;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
-
+using AtConnect.Core.SharedDTOs;
 namespace AtConnect.Controllers
 {
     [Route("api/[controller]")]
