@@ -21,6 +21,10 @@ namespace AtConnect
         {
             var builder = WebApplication.CreateBuilder(args);
 
+            // Add environment variables to configuration
+            builder.Configuration.AddEnvironmentVariables();
+            
+            // Configure options
             builder.Services.Configure<JwtOptions>(
                 builder.Configuration.GetSection("AtConnect:Jwt"));
             builder.Services.Configure<DatabaseOptions>(
@@ -29,7 +33,11 @@ namespace AtConnect
 
             // Add services to the container.
 
-            builder.Services.AddControllers();
+            builder.Services.AddControllers()
+                .AddJsonOptions(options =>
+                {
+                    options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+                });
 
             //Adding SignalR
             builder.Services.AddSignalR();
@@ -45,7 +53,8 @@ namespace AtConnect
                 var dbOptions = serviceProvider.GetRequiredService<IOptions<DatabaseOptions>>().Value;
                 options.UseSqlServer(dbOptions.AtConnectSqlServerConnection);
             });
-            //Adding CROS
+            // Adding CORS
+            // WARNING: AllowAnyOrigin is insecure for production. Specify allowed origins instead.
             builder.Services.AddCors(options =>
             {
                 options.AddPolicy("AllowAll", policy =>
@@ -61,7 +70,10 @@ namespace AtConnect
             builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
             builder.Services.AddScoped<IEmailService, EmailService>();
             builder.Services.AddScoped<IChatService, ChatService>();
-                
+            builder.Services.AddScoped<IRequestService,RequestService >();
+            builder.Services.AddScoped<IUserService, UserService>();
+            builder.Services.AddScoped<IUserRepository, UserRepository>();
+            builder.Services.AddScoped<INotificationService, NotificationService>();
 
 
             var JwtOptions = builder.Configuration.GetSection("AtConnect:Jwt").Get<JwtOptions>();
@@ -89,11 +101,11 @@ namespace AtConnect
             };
             //Avoid duplicates creation when injecting in DI container
             builder.Services.AddSingleton(TokenValidationParameters);
-            builder.Services.AddAuthentication()
+            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
                 {
                     options.SaveToken = true;
-                    options.TokenValidationParameters = TokenValidationParameters;      
+                    options.TokenValidationParameters = TokenValidationParameters;
                 }); 
             var app = builder.Build();
             // Configure the HTTP request pipeline.

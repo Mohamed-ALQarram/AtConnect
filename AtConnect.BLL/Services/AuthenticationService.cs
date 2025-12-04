@@ -33,12 +33,12 @@ namespace AtConnect.BLL.Services
             jwtOptions = JwtOptions.Value;
         }
 
-        public async Task<ResultDTO<object>> RegisterAsync(RegistrationRequest registration)
+        public async Task<ResultDTO<RegistrationRequest>> RegisterAsync(RegistrationRequest registration)
         {
             bool unVerifiedEmail = false;
             var User = new AppUser(registration.FirstName, registration.LastName, registration.UserName, registration.Email, registration.Password);
-                if (await unitOfWork.Users.CheckEmailAsync(User.Email)) return new (false ,"This email already exists.");
-            else if (await unitOfWork.Users.CheckUserNameAsync(User.UserName)) return new (false,"This UserName already exists.");
+                if (await unitOfWork.Users.CheckEmailAsync(User.Email)) return new (false ,"This email already exists.", registration);
+            else if (await unitOfWork.Users.CheckUserNameAsync(User.UserName)) return new (false,"This UserName already exists.", registration);
             else 
             {
                 // This block handles the scenario where the email exists but is still unverified.
@@ -57,7 +57,7 @@ namespace AtConnect.BLL.Services
 
             await unitOfWork.SaveChangesAsync();
 
-            return new (true, "The Verification code has been sent to your mail.");
+            return new (true, "The Verification code has been sent to your mail.", registration);
         }
 
         public async Task<ResultDTO<AuthResponse>> VerifyEmailToken(ConfirmEmailVerificationRequest verificationToken)

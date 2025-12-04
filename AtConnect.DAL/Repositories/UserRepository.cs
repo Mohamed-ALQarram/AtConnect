@@ -1,7 +1,9 @@
 ﻿using AtConnect.Core.Interfaces;
 using AtConnect.Core.Models;
+using AtConnect.Core.SharedDTOs;
 using AtConnect.DAL.Data;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
 
 namespace AtConnect.DAL.Repositories
 {
@@ -40,6 +42,61 @@ namespace AtConnect.DAL.Repositories
         {
             if (string.IsNullOrWhiteSpace(UserNameOrEmail)) throw new ArgumentNullException("invalid UserName or Email");
             return await appDbContext.AppUsers.FirstOrDefaultAsync(x=>x.UserName ==  UserNameOrEmail || x.Email == UserNameOrEmail);
+        }
+
+        public async Task<List<UserListItemDto>> GetUsersAsync(int currentUserId, int page, int pageSize)
+        {
+            var query =
+                from user in appDbContext.AppUsers
+                where user.Id != currentUserId
+                select new UserListItemDto
+                {
+                    Id = user.Id,
+                    FullName = $"{user.FirstName} {user.LastName}",
+                    ProfilePhotoUrl = user.ImageURL ?? "",
+                    isActive = user.IsActive,
+                    AboutUser = user.AboutUser ?? "",
+                    UserName = user.UserName,
+                    // Proper left join with ChatRequests
+                    ChatRequest = appDbContext.ChatRequests
+                        .Where(cr =>
+                               ((cr.SenderId == currentUserId && cr.ReceiverId == user.Id)
+                            || (cr.ReceiverId == currentUserId && cr.SenderId == user.Id)))
+                        .OrderByDescending(cr => cr.CreatedAt)
+                        .FirstOrDefault()
+                };
+
+            // Apply pagination
+            var paged = query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+            return await paged;
+        }
+    
+        public async Task<UserListItemDto?> GetUserProfileAsync(int currentUserId, int targetUserId)
+        {
+            var query =
+                from user in appDbContext.AppUsers
+                where user.Id == targetUserId
+                select new UserListItemDto
+                {
+                    Id = user.Id,
+                    FullName = $"{user.FirstName} {user.LastName}",
+                    ProfilePhotoUrl = user.ImageURL ?? "",
+                    isActive = user.IsActive,
+                    AboutUser = user.AboutUser ?? "",
+                    UserName = user.UserName,
+                    // Proper left join with ChatRequests
+                    ChatRequest = appDbContext.ChatRequests
+                        .Where(cr =>
+                               ((cr.SenderId == currentUserId && cr.ReceiverId == targetUserId)
+                            || (cr.ReceiverId == currentUserId && cr.SenderId == targetUserId)))
+                        .OrderByDescending(cr => cr.CreatedAt)
+                        .FirstOrDefault()
+                };
+            
+            return await query.FirstOrDefaultAsync();
         }
     }
 }

@@ -11,7 +11,7 @@ namespace AtConnect.BLL.Interfaces
 {
     public interface IAuthenticationService
     {
-        Task<ResultDTO<object>> RegisterAsync(RegistrationRequest user);
+        Task<ResultDTO<RegistrationRequest>> RegisterAsync(RegistrationRequest user);
         Task<ResultDTO<AuthResponse>> LoginAsync(LoginRequest loginRequest);
         Task<ResultDTO<AuthResponse>> RefreshTokenAsync(RefreshTokenRequest refreshTokenDRequest);
         Task<bool> ForgetPasswordAsync(EmailVerificationRequest forgotPassRequest);

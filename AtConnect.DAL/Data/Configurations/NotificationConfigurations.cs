@@ -30,6 +30,16 @@ namespace AtConnect.DAL.Data.Configurations
                    .WithMany()
                    .HasForeignKey(n => n.UserId)
                    .OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasOne(n => n.Chat)
+                   .WithMany()
+                   .HasForeignKey(n => n.ChatId)
+                   .OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasOne(n => n.ChatRequest)
+                   .WithMany()
+                   .HasForeignKey(n => n.ChatRequestId)
+                   .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

@@ -4,6 +4,7 @@ using AtConnect.DAL.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AtConnect.DAL.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251202115400_Modify-Notification-Model")]
+    partial class ModifyNotificationModel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -61,9 +64,6 @@ namespace AtConnect.DAL.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int?>("AppUserId")
-                        .HasColumnType("int");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -77,8 +77,6 @@ namespace AtConnect.DAL.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("AppUserId");
 
                     b.HasIndex("ReceiverId");
 
@@ -262,9 +260,6 @@ namespace AtConnect.DAL.Migrations
                     b.Property<string>("AboutUser")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Bio")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("FirstName")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -314,10 +309,6 @@ namespace AtConnect.DAL.Migrations
 
             modelBuilder.Entity("AtConnect.Core.Models.ChatRequest", b =>
                 {
-                    b.HasOne("AtConnect.Core.Models.AppUser", null)
-                        .WithMany("ChatRequests")
-                        .HasForeignKey("AppUserId");
-
                     b.HasOne("AtConnect.Core.Models.AppUser", "Receiver")
                         .WithMany()
                         .HasForeignKey("ReceiverId")
@@ -397,8 +388,6 @@ namespace AtConnect.DAL.Migrations
 
             modelBuilder.Entity("AtConnect.Core.Models.AppUser", b =>
                 {
-                    b.Navigation("ChatRequests");
-
                     b.Navigation("Chats");
 
                     b.Navigation("DeviceTokens");

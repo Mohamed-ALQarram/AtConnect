@@ -28,29 +28,36 @@ namespace AtConnect.DAL.Repositories
 
         public async Task<IEnumerable<UserChatDTO>> GetUserChatsAsync(int userId, int page, int pageSize)
         {
-             return await appDbContext.Chats
-                .Include(c => c.User1)
-                .Include(c => c.User2)
+            return await appDbContext.Chats
                 .Where(c => c.User1Id == userId || c.User2Id == userId)
-                .Skip((page-1) * pageSize)
+                .Include(c => c.Messages)
+                .Include(c=>c.User1)
+                .Include(c => c.User2)
+                .Select(c => new
+                {
+                    Chat = c,
+                    OtherUser = c.User1Id == userId ? c.User2 : c.User1,
+                    MostRecentMessage = c.Messages
+                        .OrderByDescending(m => m.SentAt)
+                        .FirstOrDefault(),
+                    UnreadMessageCount = c.Messages
+                        .Count(m => m.Status != MessageStatus.Seen && m.SenderId != userId),
+                    // Use this for ordering - null-safe
+                    MostRecentMessageDate = c.Messages
+                        .OrderByDescending(m => m.SentAt)
+                        .Select(m => (DateTime?)m.SentAt)
+                        .FirstOrDefault()
+                })
+                .OrderByDescending(c => c.MostRecentMessageDate ?? DateTime.MinValue)
+                .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                    .Select(c => new 
-                    {
-                        OtherUser = c.User1Id == userId ? c.User2 : c.User1,
-                        MostRecentMessage = c.Messages
-                             .OrderByDescending(m => m.SentAt)
-                             .FirstOrDefault() ?? new Message(0,0,""),
-                        UnreadMessageCount = c.Messages
-                             .Count(m => m.Status != MessageStatus.Seen && m.SenderId != userId)
-                    })
-    .               OrderByDescending(c => c.MostRecentMessage!.SentAt)
-                    .Select(c => new UserChatDTO(
-                        c.OtherUser.Id,
-                        c.OtherUser.ImageURL,
-                        c.OtherUser.IsActive,
-                        c.MostRecentMessage.Content, 
-                        c.MostRecentMessage.SentAt, 
-                        c.UnreadMessageCount))
+                .Select(c => new UserChatDTO(
+                    c.OtherUser.Id,
+                    c.OtherUser.ImageURL ?? "",
+                    c.OtherUser.IsActive,
+                    c.MostRecentMessage != null ? c.MostRecentMessage.Content : string.Empty,
+                    c.MostRecentMessage != null ? c.MostRecentMessage.SentAt : DateTime.MinValue,
+                    c.UnreadMessageCount))
                 .ToListAsync();
         }
     }
