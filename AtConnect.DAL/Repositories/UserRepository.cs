@@ -1,9 +1,8 @@
-﻿using AtConnect.BLL.DTOs;
-using AtConnect.Core.Interfaces;
+﻿using AtConnect.Core.Interfaces;
 using AtConnect.Core.Models;
+using AtConnect.Core.SharedDTOs;
 using AtConnect.DAL.Data;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Internal;
 
 namespace AtConnect.DAL.Repositories
 {
