@@ -1,4 +1,4 @@
-﻿using AtConnect.BLL.DTOs;
+﻿using AtConnect.Core.SharedDTOs;
 using AtConnect.Core.Models;
 
 namespace AtConnect.Core.Interfaces

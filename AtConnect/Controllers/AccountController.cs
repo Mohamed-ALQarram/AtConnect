@@ -1,11 +1,8 @@
 ﻿using AtConnect.BLL.DTOs;
 using AtConnect.BLL.Interfaces;
-using AtConnect.Core.Models;
 using AtConnect.DTOs;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ApiExplorer;
 
 namespace AtConnect.Controllers
 {

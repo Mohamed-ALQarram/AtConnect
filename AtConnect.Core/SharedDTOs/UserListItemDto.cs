@@ -1,12 +1,6 @@
-﻿using AtConnect.Core.Enum;
-using AtConnect.Core.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using AtConnect.Core.Models;
 
-namespace AtConnect.BLL.DTOs
+namespace AtConnect.Core.SharedDTOs
 {
     public class UserListItemDto
     {

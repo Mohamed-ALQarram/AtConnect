@@ -1,20 +1,18 @@
 ﻿using AtConnect.BLL.DTOs;
 using AtConnect.BLL.Interfaces;
-using AtConnect.BLL.Services;
 using AtConnect.Core.Enum;
 using AtConnect.Core.Models;
 using AtConnect.Core.SharedDTOs;
 using AtConnect.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore.Query.Internal;
 using System.Security.Claims;
 
 namespace AtConnect.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    //[Authorize]
+    [Authorize]
     public class ChatController : ControllerBase
     {
         private readonly IChatService _chatService;

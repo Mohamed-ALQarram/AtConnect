@@ -1,15 +1,15 @@
 ﻿using AtConnect.BLL.DTOs;
 using AtConnect.BLL.Interfaces;
+using AtConnect.Core.SharedDTOs;
 using AtConnect.DTOs;
-using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
-
 namespace AtConnect.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    //[Authorize]
+    [Authorize]
     public class UserController : ControllerBase
     {
         private readonly IUserService _userService;
