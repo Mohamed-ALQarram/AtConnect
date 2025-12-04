@@ -10,7 +10,7 @@ namespace AtConnect.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
-    public class NotificationsController : ControllerBase
+    public class NotificationsController : ApiControllerBase
     {
         private readonly INotificationService _notificationService;
 
@@ -22,33 +22,41 @@ namespace AtConnect.Controllers
         [HttpGet]
         public async Task<ActionResult<ResultDTO<List<NotificationDTO>>>> GetNotifications([FromQuery] PaginationRequest request)
         {
-            int.TryParse(HttpContext.User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value, out int userId);
-            var response = await _notificationService.GetNotificationsAsync(userId, request.Page, request.PageSize);
+            var userId = GetCurrentUserId();
+            if (userId == null)
+                return Unauthorized(new ResultDTO<List<NotificationDTO>>(false, "Invalid or missing user ID in token"));
+
+            var response = await _notificationService.GetNotificationsAsync(userId.Value, request.Page, request.PageSize);
             if (!response.Success)
-                return Unauthorized(response);
+                return BadRequest(response);
             return response;
         }
 
         [HttpGet("unread")]
         public async Task<ActionResult<ResultDTO<List<NotificationDTO>>>> GetUnread()
         {
-            int.TryParse(HttpContext.User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value, out int userId);
-            var response = await _notificationService.GetUnreadNotificationsAsync(userId);
+            var userId = GetCurrentUserId();
+            if (userId == null)
+                return Unauthorized(new ResultDTO<List<NotificationDTO>>(false, "Invalid or missing user ID in token"));
+
+            var response = await _notificationService.GetUnreadNotificationsAsync(userId.Value);
             if (!response.Success)
-                return Unauthorized(response);
+                return BadRequest(response);
             return response;
         }
 
         [HttpPost("read-all")]
         public async Task<ActionResult<ResultDTO<bool>>> MarkAllAsRead()
         {
-            int.TryParse(HttpContext.User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value, out int userId);
-            var response = await _notificationService.MarkAllAsReadAsync(userId);
+            var userId = GetCurrentUserId();
+            if (userId == null)
+                return Unauthorized(new ResultDTO<bool>(false, "Invalid or missing user ID in token"));
+
+            var response = await _notificationService.MarkAllAsReadAsync(userId.Value);
             if (!response.Success)
                 return BadRequest(response);
             return response;
         }
-
 
     }
 }

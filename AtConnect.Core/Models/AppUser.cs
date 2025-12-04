@@ -8,6 +8,7 @@
         public DateTime LastSeen { get; private set; }
         public bool IsActive { get; private set; }
         public string? AboutUser { get; private set; }
+        public string? Bio { get; private set; }
         public ICollection<Chat> Chats { get; set; }
         public ICollection<ChatRequest>? ChatRequests { get; set; }
         public ICollection<DeviceToken> DeviceTokens { get; set; }
@@ -40,6 +41,10 @@
         public void ChangeAboutUser(string newAboutContent)
         {
             AboutUser = newAboutContent;
+        }
+        public void ChangeBio(string Bio)
+        {
+            this.Bio = Bio;
         }
 
         public void ChangeLastName(string newName)

@@ -10,6 +10,8 @@ namespace AtConnect.Core.Interfaces
         Task<bool> CheckUnVerifiedEmailAsync(string Email);
         Task<AppUser?> GetByUserNameOrEmailAsync(string UserNameOrEmail);
         public  Task<List<UserListItemDto>> GetUsersAsync(int currentUserId, int page, int pageSize);
+        public Task<UserListItemDto?> GetUserProfileAsync(int currentUserId, int targetUserId);
+
     }
 
 }

@@ -32,7 +32,36 @@ namespace AtConnect.BLL.Services
 
             return new ResultDTO<List<UserListItemDto>>(true, "Users retrieved successfully", UsersPage);
         }
+        public async Task<ResultDTO<UserListItemDto>> GetUserProfileByIdAsync(int currentUserId, int targetUserId)
+        {
+            var user= await _unitOfWork.Users.GetUserProfileAsync(currentUserId, targetUserId);
+            if (user == null) return new(false, "Invalid user ID", null);
 
-       
+            return new ResultDTO<UserListItemDto>(true, "Users retrieved successfully", user);
+        }
+
+        public async Task<ResultDTO<object>> UpdateUserProfileAsync(int userId, string? FirstName, string? LastName, string? ProfileImageUrl, string? Bio, string? About)
+        {
+            var user=  await _unitOfWork.Users.GetByKeysAsync(userId);
+            if (user == null) return new(false, "Invalid UserId", null);
+
+            if(!string.IsNullOrWhiteSpace(FirstName))
+                user.ChangeFirstName(FirstName);
+
+            if(!string.IsNullOrWhiteSpace(LastName))
+                user.ChangeLastName(LastName);
+
+            if(!string.IsNullOrWhiteSpace(ProfileImageUrl))
+                user.ChangeImage(ProfileImageUrl);
+
+            if(!string.IsNullOrWhiteSpace(Bio))
+                user.ChangeBio(Bio);
+
+            if (!string.IsNullOrWhiteSpace(About))
+                user.ChangeAboutUser(About);
+            await _unitOfWork.SaveChangesAsync();
+            return new ResultDTO<object>(true, "Saved Successfully", null);
+            
+        }
     }
 }

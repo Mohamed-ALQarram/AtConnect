@@ -11,7 +11,7 @@ namespace AtConnect.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
-    public class UserController : ControllerBase
+    public class UserController : ApiControllerBase
     {
         private readonly IUserService _userService;
         public UserController(IUserService userService)
@@ -22,13 +22,38 @@ namespace AtConnect.Controllers
         [HttpGet("AllUsers")]
         public async Task<ActionResult<ResultDTO<List<UserListItemDto>>>> GetUsers([FromQuery] PaginationRequest request)
         {
-            int.TryParse(HttpContext.User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value, out int userId);
-            var response = await _userService.GetUsersAsync(userId, request.Page, request.PageSize);
+            var userId = GetCurrentUserId();
+            if (userId == null)
+                return Unauthorized(new ResultDTO<List<UserListItemDto>>(false, "Invalid or missing user ID in token"));
+
+            var response = await _userService.GetUsersAsync(userId.Value, request.Page, request.PageSize);
             if (!response.Success)
                 return BadRequest(response);
             return response;
         }
+        [HttpGet("UserProfile")]
+        public async Task<ActionResult<ResultDTO<UserListItemDto>>> GetUserProfile(int targetUserId)
+        {
+            var currentUserId = GetCurrentUserId();
+            if (currentUserId == null)
+                return Unauthorized(new ResultDTO<List<UserListItemDto>>(false, "Invalid or missing user ID in token"));
 
+            var response = await _userService.GetUserProfileByIdAsync((int) currentUserId, targetUserId);
+            if (!response.Success)
+                return BadRequest(response);
+            return response;
+        }
+        [HttpPut("EditProfile")]
+        public async Task<ActionResult<ResultDTO<object>>> UpdateUserProfile(UpdateProfileRequest updateProfile)
+        {
+            var userId= GetCurrentUserId();
+            if (userId == null) return Unauthorized(new ResultDTO<object>(false, "Invalid or missing user ID in token", null));
+            var response = await _userService.UpdateUserProfileAsync((int)userId, updateProfile.FirstName, updateProfile.LastName, updateProfile.ProfileImageUrl, updateProfile.Bio, updateProfile.About);
+                if(!response.Success)
+                    return BadRequest(response);
+            return response;
+
+        }
     }
 
 }

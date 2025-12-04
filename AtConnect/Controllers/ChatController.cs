@@ -13,7 +13,7 @@ namespace AtConnect.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
-    public class ChatController : ControllerBase
+    public class ChatController : ApiControllerBase
     {
         private readonly IChatService _chatService;
         private readonly IRequestService _requestService;
@@ -26,21 +26,26 @@ namespace AtConnect.Controllers
         [HttpGet("UserChats")]
         public async Task<ActionResult<ResultDTO<List<UserChatDTO>>>> GetUserChats([FromQuery]  PaginationRequest request)
         {
-            int.TryParse(HttpContext.User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value, out int userId);
-            var response = await _chatService.GetUserChatsAsync(userId, request.Page, request.PageSize);
-                if(!response.Success)
-                return Unauthorized(response);
-            return response;
+            var userId = GetCurrentUserId();
+            if (userId == null)
+                return Unauthorized(new ResultDTO<List<UserChatDTO>>(false, "Invalid or missing user ID in token"));
 
+            var response = await _chatService.GetUserChatsAsync(userId.Value, request.Page, request.PageSize);
+            if(!response.Success)
+                return BadRequest(response);
+            return response;
         }
 
         [HttpGet("ChatRequests")]
         public async Task<ActionResult<ResultDTO<List<ChatRequestDTO>>>> GetChatRequests([FromQuery] PaginationRequest request)
         {
-            int.TryParse(HttpContext.User.Claims.FirstOrDefault(x=>x.Type ==ClaimTypes.NameIdentifier)?.Value, out int userId);
-            var response = await _chatService.getPendingChatRequestsAsync(userId, request.Page, request.PageSize);
+            var userId = GetCurrentUserId();
+            if (userId == null)
+                return Unauthorized(new ResultDTO<List<ChatRequestDTO>>(false, "Invalid or missing user ID in token"));
+
+            var response = await _chatService.getPendingChatRequestsAsync(userId.Value, request.Page, request.PageSize);
             if (!response.Success)
-                return Unauthorized(response);
+                return BadRequest(response);
             return response;
         }
 
@@ -49,12 +54,14 @@ namespace AtConnect.Controllers
         {
             if (dto == null) return BadRequest(new ResultDTO<bool>(false, "Invalid body."));
 
-            int.TryParse(HttpContext.User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value, out int senderId);
+            var senderId = GetCurrentUserId();
+            if (senderId == null)
+                return Unauthorized(new ResultDTO<bool>(false, "Invalid or missing user ID in token"));
 
             if (dto.ToUserId <= 0)
-                return BadRequest(new ResultDTO<bool>(false, "Couldn't find the user ID in the bearer token."));
+                return BadRequest(new ResultDTO<bool>(false, "Invalid recipient user ID."));
 
-            var response = await _requestService.SendRequestAsync(senderId, dto.ToUserId);
+            var response = await _requestService.SendRequestAsync(senderId.Value, dto.ToUserId);
             if (!response.Success)
                 return BadRequest(response);
 
@@ -63,24 +70,20 @@ namespace AtConnect.Controllers
 
 
         [HttpPost("AcceptRequest")]
-        public async Task<ActionResult<ResultDTO<object>>> ChangeChatRequestStatus(int RequestId, bool isAccepted)
+        public async Task<ActionResult<ResultDTO<object>>> ChangeChatRequestStatus([FromBody] ChangeRequestStatusDto dto)
         {
-            RequestStatus status;
-            if (isAccepted)
-                status = RequestStatus.Accepted;
-            else
-                status = RequestStatus.Rejected;
-            var response=  await _chatService.ChangeRequestStatusAsync(RequestId, status);
+            var status = dto.IsAccepted ? RequestStatus.Accepted : RequestStatus.Rejected;
+            var response = await _chatService.ChangeRequestStatusAsync(dto.RequestId, status);
             if(!response.Success)
                 return BadRequest(response);
             return response;
 
         }
         [HttpGet("ChatMessages")]
-        public async Task<ActionResult<ResultDTO<List<Message>>>> getChatMessages(int chatId, PaginationRequest request)
+        public async Task<ActionResult<ResultDTO<List<Message>>>> GetChatMessages([FromQuery] GetChatMessagesRequest request)
         {
-            var response = await _chatService.GetChatMessagesAsync(chatId, request.Page, request.PageSize);
-            if(!response.Success) return Unauthorized(response);
+            var response = await _chatService.GetChatMessagesAsync(request.ChatId, request.Page, request.PageSize);
+            if(!response.Success) return BadRequest(response);
             return response;
         }
     }
