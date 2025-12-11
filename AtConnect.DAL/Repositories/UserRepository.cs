@@ -44,7 +44,7 @@ namespace AtConnect.DAL.Repositories
             return await appDbContext.AppUsers.FirstOrDefaultAsync(x=>x.UserName ==  UserNameOrEmail || x.Email == UserNameOrEmail);
         }
 
-        public async Task<List<UserListItemDto>> GetUsersAsync(int currentUserId, int page, int pageSize)
+        public async Task<PagedResultDto<UserListItemDto>> GetUsersAsync(int currentUserId, int page, int pageSize)
         {
             var query =
                 from user in appDbContext.AppUsers
@@ -66,12 +66,15 @@ namespace AtConnect.DAL.Repositories
                         .FirstOrDefault()
                 };
 
+            var totalCount = await query.CountAsync();
+
             // Apply pagination
-            var paged = query
+            var items = await query
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
-            return await paged;
+
+            return new PagedResultDto<UserListItemDto>(items, totalCount, page, pageSize);
         }
     
         public async Task<UserListItemDto?> GetUserProfileAsync(int currentUserId, int targetUserId)

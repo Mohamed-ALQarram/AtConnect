@@ -20,11 +20,11 @@ namespace AtConnect.Controllers
         }
 
         [HttpGet("AllUsers")]
-        public async Task<ActionResult<ResultDTO<List<UserListItemDto>>>> GetUsers([FromQuery] PaginationRequest request)
+        public async Task<ActionResult<ResultDTO<PagedResultDto<UserListItemDto>>>> GetUsers([FromQuery] PaginationRequest request)
         {
             var userId = GetCurrentUserId();
             if (userId == null)
-                return Unauthorized(new ResultDTO<List<UserListItemDto>>(false, "Invalid or missing user ID in token"));
+                return Unauthorized(new ResultDTO<PagedResultDto<UserListItemDto>>(false, "Invalid or missing user ID in token"));
 
             var response = await _userService.GetUsersAsync(userId.Value, request.Page, request.PageSize);
             if (!response.Success)

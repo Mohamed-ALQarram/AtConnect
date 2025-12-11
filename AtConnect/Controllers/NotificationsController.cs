@@ -1,6 +1,7 @@
 ﻿using AtConnect.BLL.DTOs;
 using AtConnect.BLL.Interfaces;
 using AtConnect.DTOs;
+using AtConnect.Core.SharedDTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -20,11 +21,11 @@ namespace AtConnect.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<ResultDTO<List<NotificationDTO>>>> GetNotifications([FromQuery] PaginationRequest request)
+        public async Task<ActionResult<ResultDTO<PagedResultDto<NotificationDTO>>>> GetNotifications([FromQuery] PaginationRequest request)
         {
             var userId = GetCurrentUserId();
             if (userId == null)
-                return Unauthorized(new ResultDTO<List<NotificationDTO>>(false, "Invalid or missing user ID in token"));
+                return Unauthorized(new ResultDTO<PagedResultDto<NotificationDTO>>(false, "Invalid or missing user ID in token"));
 
             var response = await _notificationService.GetNotificationsAsync(userId.Value, request.Page, request.PageSize);
             if (!response.Success)

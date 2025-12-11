@@ -26,9 +26,9 @@ namespace AtConnect.DAL.Repositories
                                           (c.User1Id == userBId && c.User2Id == userAId));
         }
 
-        public async Task<IEnumerable<UserChatDTO>> GetUserChatsAsync(int userId, int page, int pageSize)
+        public async Task<PagedResultDto<UserChatDTO>> GetUserChatsAsync(int userId, int page, int pageSize)
         {
-            return await appDbContext.Chats
+            var query = appDbContext.Chats
                 .Where(c => c.User1Id == userId || c.User2Id == userId)
                 .Include(c => c.Messages)
                 .Include(c=>c.User1)
@@ -48,7 +48,11 @@ namespace AtConnect.DAL.Repositories
                         .Select(m => (DateTime?)m.SentAt)
                         .FirstOrDefault()
                 })
-                .OrderByDescending(c => c.MostRecentMessageDate ?? DateTime.MinValue)
+                .OrderByDescending(c => c.MostRecentMessageDate ?? DateTime.MinValue);
+
+            var totalCount = await query.CountAsync();
+
+            var items = await query
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .Select(c => new UserChatDTO(
@@ -59,6 +63,8 @@ namespace AtConnect.DAL.Repositories
                     c.MostRecentMessage != null ? c.MostRecentMessage.SentAt : DateTime.MinValue,
                     c.UnreadMessageCount))
                 .ToListAsync();
+
+            return new PagedResultDto<UserChatDTO>(items, totalCount, page, pageSize);
         }
     }
 }
