@@ -48,7 +48,7 @@ namespace AtConnect.DAL.Repositories
         {
             var query =
                 from user in appDbContext.AppUsers
-                where user.Id != currentUserId
+                where user.Id != currentUserId && user.isEmailVerified == true
                 select new UserListItemDto
                 {
                     Id = user.Id,
