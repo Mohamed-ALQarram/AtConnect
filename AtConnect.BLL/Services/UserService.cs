@@ -24,13 +24,13 @@ namespace AtConnect.BLL.Services
             _unitOfWork = unitOfWork;
         }
 
-        public async Task<ResultDTO<List<UserListItemDto>>> GetUsersAsync(int currentUserId, int page, int pageSize)
+        public async Task<ResultDTO<PagedResultDto<UserListItemDto>>> GetUsersAsync(int currentUserId, int page, int pageSize)
         {
             if (page < 1) return new (false, "Invalid page number", null);
             if (pageSize < 1) return new(false, "Invalid page size", null);
             var UsersPage= await _unitOfWork.Users.GetUsersAsync(currentUserId, page, pageSize);
 
-            return new ResultDTO<List<UserListItemDto>>(true, "Users retrieved successfully", UsersPage);
+            return new ResultDTO<PagedResultDto<UserListItemDto>>(true, "Users retrieved successfully", UsersPage);
         }
         public async Task<ResultDTO<UserListItemDto>> GetUserProfileByIdAsync(int currentUserId, int targetUserId)
         {

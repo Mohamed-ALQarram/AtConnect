@@ -17,17 +17,23 @@ namespace AtConnect.DAL.Repositories
             this.appDbContext = appDbContext;
         }
 
-        public async Task<List<ChatRequestDTO>> GetPendingRequestAsync(int receiverId, int page=1, int pageSize=10)
+        public async Task<PagedResultDto<ChatRequestDTO>> GetPendingRequestAsync(int receiverId, int page, int pageSize)
         {
-            return await appDbContext.ChatRequests
-                .Where(x=> x.ReceiverId == receiverId &&
-                    x.Status == RequestStatus.Pending)
-                .Skip((page -1 )*pageSize)
-                .Include(x => x.Sender)
-                .Include(x => x.Receiver)
+            var query = appDbContext.ChatRequests
+                                    .Include(r => r.Sender)
+                                    .Where(x => x.ReceiverId == receiverId &&
+                                               x.Status == RequestStatus.Pending);
+
+            var totalCount = await query.CountAsync();
+
+            var items = await query
+                .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .Select(x => new ChatRequestDTO
-                ( x.Id, x.SenderId, $"{x.Sender.FirstName}  {x.Sender.LastName}", x.Sender.ImageURL??"",0)).ToListAsync();
+                (x.Id, x.SenderId, $"{x.Sender.FirstName}  {x.Sender.LastName}", x.Sender.ImageURL ?? "", 0))
+                .ToListAsync();
+
+            return new PagedResultDto<ChatRequestDTO>(items, totalCount, page, pageSize);
         }
         
         public async Task<bool> ChangeRequestStatusAsync(int RequestId, RequestStatus newStatus)

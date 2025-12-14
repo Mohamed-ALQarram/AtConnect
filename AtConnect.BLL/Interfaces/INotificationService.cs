@@ -10,7 +10,7 @@ namespace AtConnect.BLL.Interfaces
 {
     public interface INotificationService
     {
-        Task<ResultDTO<List<NotificationDTO>>> GetNotificationsAsync(int userId, int page, int pageSize);
+        Task<ResultDTO<PagedResultDto<NotificationDTO>>> GetNotificationsAsync(int userId, int page, int pageSize);
         Task<ResultDTO<List<NotificationDTO>>> GetUnreadNotificationsAsync(int userId);
         Task<ResultDTO<bool>> MarkAsReadAsync(int id, int userId);
         Task<ResultDTO<bool>> MarkAllAsReadAsync(int userId);

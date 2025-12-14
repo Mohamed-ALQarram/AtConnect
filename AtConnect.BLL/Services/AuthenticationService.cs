@@ -35,26 +35,31 @@ namespace AtConnect.BLL.Services
 
         public async Task<ResultDTO<RegistrationRequest>> RegisterAsync(RegistrationRequest registration)
         {
-            bool unVerifiedEmail = false;
-            var User = new AppUser(registration.FirstName, registration.LastName, registration.UserName, registration.Email, registration.Password);
-                if (await unitOfWork.Users.CheckEmailAsync(User.Email)) return new (false ,"This email already exists.", registration);
-            else if (await unitOfWork.Users.CheckUserNameAsync(User.UserName)) return new (false,"This UserName already exists.", registration);
-            else 
+            string email = registration.Email.Trim().ToLowerInvariant();
+            var existingUser = await unitOfWork.Users.GetByUserNameOrEmailAsync(email);
+            if (existingUser != null)
             {
-                // This block handles the scenario where the email exists but is still unverified.
-                // Instead of creating a new user record (which would violate the unique email constraint),
-                // we detect the unverified entry and simply resend a new OTP to that email.
-                unVerifiedEmail = await unitOfWork.Users.CheckUnVerifiedEmailAsync(User.Email);
+                if(existingUser.isEmailVerified)
+                {
+                    return new(false, "This email already exists.", registration);
+                }
+
+                await SendTokenToEmailAsync(existingUser); // this will send the Code to user email and will update our object with the code to save it on Db
+                existingUser.ChangeFirstName(registration.FirstName);
+                existingUser.ChangeLastName(registration.LastName);
+                existingUser.ChangeUserName(registration.UserName);
+                existingUser.ChangePassword(PasswordHasher.Hash(registration.Password));
+                unitOfWork.Users.Update(existingUser);
+                await unitOfWork.SaveChangesAsync();
+                return new (true, "The Verification code has been sent to your mail.", registration);
             }
 
-            await SendTokenToEmailAsync(User);
-            if (!unVerifiedEmail) // avoid add user if it's already exist but not verified.
-            {
-                User.ChangePassword(PasswordHasher.Hash(User.PasswordHash));
-                User.EmailVerification(false);
-                await unitOfWork.Users.AddAsync(User);
-            }
+            if (await unitOfWork.Users.CheckUserNameAsync(registration.UserName)) return new (false,"This UserName already exists.", registration);
+            var newUser = new AppUser(registration.FirstName, registration.LastName, registration.UserName, registration.Email, PasswordHasher.Hash(registration.Password));
 
+
+            await SendTokenToEmailAsync(newUser);
+            await unitOfWork.Users.AddAsync(newUser);
             await unitOfWork.SaveChangesAsync();
 
             return new (true, "The Verification code has been sent to your mail.", registration);
@@ -84,7 +89,7 @@ namespace AtConnect.BLL.Services
         }
         public async Task<ResultDTO<AuthResponse>> LoginAsync(LoginRequest loginRequest)
         {
-            var User = await unitOfWork.Users.GetByUserNameOrEmailAsync(loginRequest.UserNameOrEmail);
+            var User = await unitOfWork.Users.GetByUserNameOrEmailAsync(loginRequest.UserNameOrEmail.Trim().ToLowerInvariant());
             if (User == null || !User.isEmailVerified || !PasswordHasher.Verify(loginRequest.Password, User.PasswordHash))
                 return new(false, "Invalid UserName or password.");
             var token = TokenHelper.CreateJWT(User, configuration, jwtOptions);
@@ -190,7 +195,7 @@ namespace AtConnect.BLL.Services
         public async Task<IdentityUser> VerifyTokenAsync(ConfirmEmailVerificationRequest ConfirmationRequest)
         {
             if (string.IsNullOrWhiteSpace(ConfirmationRequest.Email)) return null!;
-            var User= await unitOfWork.Users.GetByUserNameOrEmailAsync(ConfirmationRequest.Email);
+            var User= await unitOfWork.Users.GetByUserNameOrEmailAsync(ConfirmationRequest.Email.Trim().ToLowerInvariant());
             if (User == null) return null!;
             bool isValidToken= VerifyToken(new ValidateTokenRequest(ConfirmationRequest.Token, User.VerifyToken!, User.VerifyTokenExpires));
             if (!isValidToken) return null!;

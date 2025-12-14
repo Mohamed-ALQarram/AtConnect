@@ -21,27 +21,27 @@ namespace AtConnect.BLL.Services
             _unitOfWork = unitOfWork;
         }
 
-        public async Task<ResultDTO<List<UserChatDTO>>>  GetUserChatsAsync(int userId, int page=1, int pageSize=10)
+        public async Task<ResultDTO<PagedResultDto<UserChatDTO>>>  GetUserChatsAsync(int userId, int page=1, int pageSize=10)
         {
             if (userId <= 0 || page<0 || pageSize<0)
-                return  new ResultDTO<List<UserChatDTO>>(false, "Invalid Arguments", null);
+                return  new ResultDTO<PagedResultDto<UserChatDTO>>(false, "Invalid Arguments", null);
 
             var Chats = await _unitOfWork.Chats.GetUserChatsAsync(userId, page, pageSize);
-            return   new ResultDTO<List<UserChatDTO>>(true,null, Chats.ToList());
+            return   new ResultDTO<PagedResultDto<UserChatDTO>>(true,null, Chats);
         }
         
-        public async Task<ResultDTO<List<Message>>> GetChatMessagesAsync(int chatId, int page=1, int pageSize=50)
+        public async Task<ResultDTO<PagedResultDto<Message>>> GetChatMessagesAsync(int chatId, int page=1, int pageSize=50)
         {
             var Messages= await _unitOfWork.Messages.GetChatMessagesAsync(chatId, page, pageSize);
-            if (Messages == null) return new ResultDTO<List<Message>>(true, null, new List<Message>());
-            return new (true, null, Messages.ToList());
+            if (Messages == null) return new ResultDTO<PagedResultDto<Message>>(true, null, null);
+            return new (true, null, Messages);
         }
 
-        public async Task<ResultDTO<List<ChatRequestDTO>>> getPendingChatRequestsAsync(int receiverId, int page=1, int pageSize=10)
+        public async Task<ResultDTO<PagedResultDto<ChatRequestDTO>>> getPendingChatRequestsAsync(int receiverId, int page=1, int pageSize=10)
         {
             if (receiverId <= 0 || page <= 0 || pageSize <= 0) return new(false, "Invalid arguments", null);
             var Requests=  await _unitOfWork.ChatRequests.GetPendingRequestAsync(receiverId, page, pageSize);
-            return new ResultDTO<List<ChatRequestDTO>>(true, null, Requests);
+            return new ResultDTO<PagedResultDto<ChatRequestDTO>>(true, null, Requests);
         }
 
         public async Task<ResultDTO<object>> ChangeRequestStatusAsync(int requestId, RequestStatus status)

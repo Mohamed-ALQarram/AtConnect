@@ -20,16 +20,15 @@ namespace AtConnect.BLL.Services
             _uow = uow ?? throw new ArgumentNullException(nameof(uow));
         }
 
-        public async Task<ResultDTO<List<NotificationDTO>>> GetNotificationsAsync(int userId, int page, int pageSize)
+        public async Task<ResultDTO<PagedResultDto<NotificationDTO>>> GetNotificationsAsync(int userId, int page, int pageSize)
         {
             if (page < 1) page = 1;
-            if (pageSize < 1) pageSize = 20;
 
             // Use repository method (single source of truth for paging)
-            var entities = await _uow.Notifications.GetByUserPagedAsync(userId, page, pageSize);
+            var pagedResult = await _uow.Notifications.GetByUserPagedAsync(userId, page, pageSize);
 
             // Map to DTO
-            var items = entities.Select(n => new NotificationDTO
+            var items = pagedResult.Items.Select(n => new NotificationDTO
             {
                 Id = n.Id,
                 Type = n.Type.ToString(),
@@ -38,7 +37,9 @@ namespace AtConnect.BLL.Services
                 IsRead = n.IsRead
             }).ToList();
 
-            return new ResultDTO<List<NotificationDTO>>(true, "Notifications retrieved successfully", items);
+            var resultDto = new PagedResultDto<NotificationDTO>(items, pagedResult.Metadata.TotalCount, pagedResult.Metadata.CurrentPage, pagedResult.Metadata.PageSize);
+
+            return new ResultDTO<PagedResultDto<NotificationDTO>>(true, "Notifications retrieved successfully", resultDto);
         }
 
         public async Task<ResultDTO<List<NotificationDTO>>> GetUnreadNotificationsAsync(int userId)

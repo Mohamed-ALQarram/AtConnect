@@ -24,11 +24,11 @@ namespace AtConnect.Controllers
             _requestService = requestService;
         }
         [HttpGet("UserChats")]
-        public async Task<ActionResult<ResultDTO<List<UserChatDTO>>>> GetUserChats([FromQuery]  PaginationRequest request)
+        public async Task<ActionResult<ResultDTO<PagedResultDto<UserChatDTO>>>> GetUserChats([FromQuery]  PaginationRequest request)
         {
             var userId = GetCurrentUserId();
             if (userId == null)
-                return Unauthorized(new ResultDTO<List<UserChatDTO>>(false, "Invalid or missing user ID in token"));
+                return Unauthorized(new ResultDTO<PagedResultDto<UserChatDTO>>(false, "Invalid or missing user ID in token"));
 
             var response = await _chatService.GetUserChatsAsync(userId.Value, request.Page, request.PageSize);
             if(!response.Success)
@@ -37,11 +37,11 @@ namespace AtConnect.Controllers
         }
 
         [HttpGet("ChatRequests")]
-        public async Task<ActionResult<ResultDTO<List<ChatRequestDTO>>>> GetChatRequests([FromQuery] PaginationRequest request)
+        public async Task<ActionResult<ResultDTO<PagedResultDto<ChatRequestDTO>>>> GetChatRequests([FromQuery] PaginationRequest request)
         {
             var userId = GetCurrentUserId();
             if (userId == null)
-                return Unauthorized(new ResultDTO<List<ChatRequestDTO>>(false, "Invalid or missing user ID in token"));
+                return Unauthorized(new ResultDTO<PagedResultDto<ChatRequestDTO>>(false, "Invalid or missing user ID in token"));
 
             var response = await _chatService.getPendingChatRequestsAsync(userId.Value, request.Page, request.PageSize);
             if (!response.Success)
@@ -80,7 +80,7 @@ namespace AtConnect.Controllers
 
         }
         [HttpGet("ChatMessages")]
-        public async Task<ActionResult<ResultDTO<List<Message>>>> GetChatMessages([FromQuery] GetChatMessagesRequest request)
+        public async Task<ActionResult<ResultDTO<PagedResultDto<Message>>>> GetChatMessages([FromQuery] GetChatMessagesRequest request)
         {
             var response = await _chatService.GetChatMessagesAsync(request.ChatId, request.Page, request.PageSize);
             if(!response.Success) return BadRequest(response);

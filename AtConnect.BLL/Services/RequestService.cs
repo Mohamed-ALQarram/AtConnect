@@ -25,15 +25,17 @@ namespace AtConnect.BLL.Services
             if (senderId == toUserId)
                 return new ResultDTO<bool>(false, "Cannot send a request to yourself.");
 
-            // 1) Check for existing pending requests for the target (avoid duplicates)
+            
+
+            // 2) Check for existing pending requests for the target (avoid duplicates)
             var existing = await _uow.ChatRequests.GetPendingRequestAsync(toUserId, 1, 100);
-            if (existing != null && existing.Any(r => r.SenderId == senderId))
+            if (existing != null && existing.Items.Any(r => r.SenderId == senderId))
                 return new ResultDTO<bool>(false, "A pending request already exists.");
 
-            // 2) Create entity using public constructor (safe, follows aggregate rules)
+            // 3) Create entity using public constructor (safe, follows aggregate rules)
             var newRequest = new ChatRequest(senderId, toUserId);
 
-            // 3) Persist via repository + unit of work
+            // 4) Persist via repository + unit of work
             await _uow.ChatRequests.AddAsync(newRequest);
 
             // IUnitOfWork exposes SaveChangesAsync() (from your snippet) — call it to persist
