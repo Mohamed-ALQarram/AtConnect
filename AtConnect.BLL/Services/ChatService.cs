@@ -74,5 +74,17 @@ namespace AtConnect.BLL.Services
             if(chatId <1) return null;
             return await _unitOfWork.Chats.GetOtherParticipantIdAsync(chatId, userId);
         }
+
+        public async Task<ResultDTO<UserChatDTO>> GetChatByIdAsync(int chatId, int userId)
+        {
+            if (chatId <= 0 || userId <= 0)
+                return new ResultDTO<UserChatDTO>(false, "Invalid arguments", null);
+
+            var chat = await _unitOfWork.Chats.GetChatByIdAsync(chatId, userId);
+            if (chat == null)
+                return new ResultDTO<UserChatDTO>(false, "Chat not found or access denied", null);
+
+            return new ResultDTO<UserChatDTO>(true, null, chat);
+        }
     }
 }

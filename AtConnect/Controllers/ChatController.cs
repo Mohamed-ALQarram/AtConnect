@@ -86,5 +86,19 @@ namespace AtConnect.Controllers
             if(!response.Success) return BadRequest(response);
             return response;
         }
+
+        [HttpGet("{chatId}")]
+        public async Task<ActionResult<ResultDTO<UserChatDTO>>> GetChatById(int chatId)
+        {
+            var userId = GetCurrentUserId();
+            if (userId == null)
+                return Unauthorized(new ResultDTO<UserChatDTO>(false, "Invalid or missing user ID in token"));
+
+            var response = await _chatService.GetChatByIdAsync(chatId, userId.Value);
+            if (!response.Success)
+                return NotFound(response);
+
+            return response;
+        }
     }
 }

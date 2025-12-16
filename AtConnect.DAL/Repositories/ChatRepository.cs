@@ -74,5 +74,36 @@ namespace AtConnect.DAL.Repositories
 
             return chat.User1Id == userId ? chat.User2Id : chat.User1Id;
         }
+
+        public async Task<UserChatDTO?> GetChatByIdAsync(int chatId, int userId)
+        {
+            if (chatId < 1 || userId < 1) return null;
+
+            var result = await appDbContext.Chats
+                .Where(c => c.Id == chatId && (c.User1Id == userId || c.User2Id == userId))
+                .Include(c => c.Messages)
+                .Include(c => c.User1)
+                .Include(c => c.User2)
+                .Select(c => new
+                {
+                    OtherUser = c.User1Id == userId ? c.User2 : c.User1,
+                    MostRecentMessage = c.Messages
+                        .OrderByDescending(m => m.SentAt)
+                        .FirstOrDefault(),
+                    UnreadMessageCount = c.Messages
+                        .Count(m => m.Status != MessageStatus.Seen && m.SenderId != userId)
+                })
+                .FirstOrDefaultAsync();
+
+            if (result == null) return null;
+
+            return new UserChatDTO(
+                result.OtherUser.Id,
+                result.OtherUser.ImageURL ?? "",
+                result.OtherUser.IsActive,
+                result.MostRecentMessage != null ? result.MostRecentMessage.Content : string.Empty,
+                result.MostRecentMessage != null ? result.MostRecentMessage.SentAt : DateTime.MinValue,
+                result.UnreadMessageCount);
+        }
     }
 }

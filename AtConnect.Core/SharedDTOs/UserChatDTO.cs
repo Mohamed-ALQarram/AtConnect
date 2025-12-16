@@ -3,8 +3,8 @@
     public class UserChatDTO
     {
         public int OtherUserId { get; set; }
-        public string OtherUserImageURL { get; set; } = null!;
-        public bool OtherUserIsActive { get; set; }
+        public string AvatarURL { get; set; } = null!;
+        public bool IsActive { get; set; }
         public string MostRecentMessageContent { get; set; } = null!;
         public DateTime MostRecentMessageSentAt { get; set; }
         public int UnreadMessageCount { get; set; }
@@ -13,8 +13,8 @@
                           string mostRecentMessageContent, DateTime mostRecentMessageSentAt, int unreadMessageCount)
         {
             OtherUserId = otherUserId;
-            OtherUserImageURL = otherUserImageURL;
-            OtherUserIsActive = otherUserIsActive;
+            AvatarURL = otherUserImageURL;
+            IsActive = otherUserIsActive;
             MostRecentMessageContent = mostRecentMessageContent;
             MostRecentMessageSentAt = mostRecentMessageSentAt;
             UnreadMessageCount = unreadMessageCount;
