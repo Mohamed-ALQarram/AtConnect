@@ -9,16 +9,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
 namespace AtConnect.BLL.Services
 {
     public class RequestService : IRequestService
     {
         private readonly IUnitOfWork _uow;
+        private readonly INotifier _notifier;
 
-        public RequestService(IUnitOfWork uow)
+        public RequestService(IUnitOfWork uow, INotifier notifier)
         {
-            _uow = uow ;
+            _uow = uow;
+            _notifier = notifier;
         }
         public async Task<ResultDTO<bool>> SendRequestAsync(int senderId, int toUserId)
         {
@@ -40,6 +41,20 @@ namespace AtConnect.BLL.Services
 
             // IUnitOfWork exposes SaveChangesAsync() (from your snippet) — call it to persist
             await _uow.SaveChangesAsync();
+            #region Create the Notification
+
+            var notification = new Notification(
+                 toUserId,                   // Receiver (User who gets the notification)
+                  null,                       // ChatId (Null, no chat yet)
+                 newRequest.Id,              // ChatRequestId (Linked!)
+                 "You have a new connection request",
+                  NotificationType.ChatRequestReceived
+            );
+            await _uow.Notifications.AddAsync(notification);
+            await _uow.SaveChangesAsync(); // <--- Persist the notification 
+            
+            await _notifier.SendNotificationAsync(toUserId, notification);
+            #endregion
 
             return new ResultDTO<bool>(true, "Request sent successfully", true);
         }

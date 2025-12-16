@@ -17,11 +17,11 @@ namespace AtConnect.Controllers
     {
         private readonly IChatService _chatService;
         private readonly IRequestService _requestService;
-
+       
         public ChatController(IChatService chatService, IRequestService requestService)
         {
             _chatService = chatService;
-            _requestService = requestService;
+            _requestService = requestService;     
         }
         [HttpGet("UserChats")]
         public async Task<ActionResult<ResultDTO<PagedResultDto<UserChatDTO>>>> GetUserChats([FromQuery]  PaginationRequest request)
