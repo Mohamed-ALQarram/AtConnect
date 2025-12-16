@@ -5,6 +5,7 @@ using AtConnect.Core.Interfaces;
 using AtConnect.Core.Models;
 using AtConnect.DTOs.HubDTOs;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
 
 namespace AtConnect.SignalR_Hubs
@@ -15,11 +16,13 @@ namespace AtConnect.SignalR_Hubs
         private readonly IUserConnectionManager _userConnectionManager;
         private readonly IChatService chatService;
         private readonly INotificationService notificationService;
-        public AtConnectHub(IUserConnectionManager userConnectionManager, IChatService chatService, INotificationService notificationService)
+        private readonly UserManager<AppUser> _userManager;
+        public AtConnectHub(IUserConnectionManager userConnectionManager, IChatService chatService, INotificationService notificationService, UserManager<AppUser> userManager)
         {
             _userConnectionManager = userConnectionManager;
             this.chatService = chatService;
             this.notificationService = notificationService;
+            _userManager = userManager;
         }
         private int getUserId()
         {
@@ -29,11 +32,31 @@ namespace AtConnect.SignalR_Hubs
         public override async Task OnConnectedAsync()
         {
             int userId = getUserId();
+            var activeConnections = _userConnectionManager.GetConnections(userId);
+            if(activeConnections == null || activeConnections.Count == 0)
+            {
+               var user = await _userManager.FindByIdAsync(userId.ToString());
+                if(user != null)
+                {
+                    user.SetActive( true);
+                    await _userManager.UpdateAsync(user);
+                } 
+            }
             if (userId >0)
                 _userConnectionManager.AddConnection(userId, Context.ConnectionId);
-            
+
             await base.OnConnectedAsync();
             
+        }
+        public async Task SendTyping(int chatId)
+        {
+            int userId = getUserId();
+
+            if (userId > 0)
+            {
+                await Clients.GroupExcept(chatId.ToString(), Context.ConnectionId)
+                             .SendAsync("ReceiveTyping", new { userId, chatId });
+            }
         }
         public async Task JoinChat(int chatId)
         {
@@ -56,10 +79,23 @@ namespace AtConnect.SignalR_Hubs
         }
         public override async Task OnDisconnectedAsync(Exception? exception)
         {
-            int.TryParse(Context.UserIdentifier, out int userId);
+            //int.TryParse(Context.UserIdentifier, out int userId);
+            int userId = getUserId();
             if (userId > 0)
+            {
                 _userConnectionManager.RemoveConnection(userId, Context.ConnectionId);
-
+                var ActiveConnections = _userConnectionManager.GetConnections(userId);
+                if (ActiveConnections == null || ActiveConnections.Count == 0)
+                {
+                    var user = await _userManager.FindByIdAsync(userId.ToString());
+                    if (user != null)
+                    {
+                        user.SetActive(false);
+                        user.UpdateLastSeen(); // Updates LastSeen to DateTime.UtcNow
+                        await _userManager.UpdateAsync(user);
+                    }
+                }
+            }
             await base.OnDisconnectedAsync(exception);
         }
     }
