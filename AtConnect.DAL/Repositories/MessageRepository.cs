@@ -3,6 +3,7 @@ using AtConnect.Core.Interfaces;
 using AtConnect.Core.Models;
 using AtConnect.DAL.Data;
 using Microsoft.EntityFrameworkCore;
+using AtConnect.Core.Enum;
 
 namespace AtConnect.DAL.Repositories
 {
@@ -36,5 +37,12 @@ namespace AtConnect.DAL.Repositories
             return new PagedResultDto<Message>(items, totalCount, page, pageSize);
         }
 
+        public async Task<bool> MarkMessagesAsReadAsync(int chatId, int ReaderId)
+        {
+            if (chatId < 1 || ReaderId < 1) throw new ArgumentOutOfRangeException();
+            int updatedRows= await appDbContext.Messages.Where(x => x.ChatId == chatId && x.SenderId != ReaderId && x.Status != MessageStatus.Seen)
+                .ExecuteUpdateAsync(setters=> setters.SetProperty(m=>m.Status , MessageStatus.Seen));
+            return updatedRows > 0;
+        }
     }
 }

@@ -7,6 +7,7 @@ using AtConnect.DTOs.HubDTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
+using MimeKit;
 
 namespace AtConnect.SignalR_Hubs
 {
@@ -27,6 +28,7 @@ namespace AtConnect.SignalR_Hubs
         private int getUserId()
         {
             int.TryParse(Context.UserIdentifier, out int userId);
+            if (userId < 1) throw new HubException("Could not access user Id from token");
             return userId;
         }
         public override async Task OnConnectedAsync()
@@ -62,7 +64,18 @@ namespace AtConnect.SignalR_Hubs
         {
             if(! await chatService.IsChatParticipantAsync(chatId, getUserId()))
                 throw new HubException("Not allowed to join this chat.");
+
+            int readerId = getUserId();
+
             await Groups.AddToGroupAsync(Context.ConnectionId, chatId.ToString());
+            bool anyUpdated = await chatService.MarkChatMessagesAsReadAsync(chatId, readerId);
+            if(anyUpdated)
+                await Clients.Group(chatId.ToString()).SendAsync("MessagesSeen", new
+                {
+                    ChatId = chatId,
+                    ReaderId = readerId,
+                    ReadAt = DateTime.UtcNow
+                });
         }
         public async Task SendMessage(SendMessageRequest msgRequest)
         {
@@ -72,10 +85,26 @@ namespace AtConnect.SignalR_Hubs
 
             await Clients.Group(message.ChatId.ToString()).SendAsync("ReceiveMessage", 
                 new{MessageId= message.Id, message.SenderId, message.ChatId, message.Content, message.SentAt});
-
-            var notification = new Notification(msgRequest.ReceiverId, msgRequest.ChatId,null, message.Content ,NotificationType.NewMessage);
+            //we should validate the receiver here first
+            var notification = new Notification(msgRequest.ReceiverId, msgRequest.ChatId, null, message.Content ,NotificationType.NewMessage);
             await notificationService.AddNotificationAsync(notification);
             await Clients.User(msgRequest.ReceiverId.ToString()).SendAsync("ReceiveNotification", notification);
+        }
+        public async Task MarkMessagesAsRead(int chatId)
+        {
+            int readerId = getUserId();
+
+            bool anyUpdated = await chatService.MarkChatMessagesAsReadAsync(chatId, readerId);
+
+            if (anyUpdated)
+            {
+                await Clients.Group(chatId.ToString()).SendAsync("MessagesSeen", new
+                {
+                    ChatId = chatId,
+                    ReaderId = readerId,
+                    ReadAt = DateTime.UtcNow
+                });
+            }
         }
         public override async Task OnDisconnectedAsync(Exception? exception)
         {

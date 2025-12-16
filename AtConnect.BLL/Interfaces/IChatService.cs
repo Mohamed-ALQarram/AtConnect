@@ -18,6 +18,7 @@ namespace AtConnect.BLL.Interfaces
         public Task<ResultDTO<PagedResultDto<ChatRequestDTO>>> getPendingChatRequestsAsync(int receiverId, int page = 1, int pageSize = 10);
         public Task SaveChatMessage(Message message);
         public Task<bool> IsChatParticipantAsync(int chatId, int userId);
+        public Task<bool> MarkChatMessagesAsReadAsync(int chatId, int ReaderId);
 
 
 
