@@ -19,8 +19,6 @@ namespace AtConnect.BLL.Interfaces
         public Task SaveChatMessage(Message message);
         public Task<bool> IsChatParticipantAsync(int chatId, int userId);
         public Task<bool> MarkChatMessagesAsReadAsync(int chatId, int ReaderId);
-
-
-
+        public Task<int?> GetOtherParticipantIdAsync(int chatId, int userId);
     }
 }

@@ -1,4 +1,4 @@
 ﻿namespace AtConnect.DTOs.HubDTOs
 {
-    public record SendMessageRequest(int ReceiverId, int ChatId, string Content); 
+    public record SendMessageRequest(int ChatId, string Content); 
 }

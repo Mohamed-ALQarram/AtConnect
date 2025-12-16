@@ -68,5 +68,11 @@ namespace AtConnect.BLL.Services
             if (chatId < 1 || ReaderId < 1) return  false;
             return await _unitOfWork.Messages.MarkMessagesAsReadAsync(chatId, ReaderId);
         }
+
+        public async Task<int?> GetOtherParticipantIdAsync(int chatId, int userId)
+        {
+            if(chatId <1) return null;
+            return await _unitOfWork.Chats.GetOtherParticipantIdAsync(chatId, userId);
+        }
     }
 }

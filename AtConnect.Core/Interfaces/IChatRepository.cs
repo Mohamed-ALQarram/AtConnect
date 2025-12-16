@@ -7,7 +7,7 @@ namespace AtConnect.Core.Interfaces
     {
         Task<bool> IsParticipantAsync(int chatId, int userId);
         Task<PagedResultDto<UserChatDTO>> GetUserChatsAsync(int userId, int page, int pageSize);
-
+        Task<int?> GetOtherParticipantIdAsync(int chatId, int userId);
     }
 
 }

@@ -56,15 +56,22 @@ namespace AtConnect.SignalR_Hubs
         public async Task SendMessage(SendMessageRequest msgRequest)
         {
             int userId = getUserId();
+            
+            // Get the receiver from the database (also validates sender is a participant)
+            int? receiverId = await chatService.GetOtherParticipantIdAsync(msgRequest.ChatId, userId);
+            
+            if (receiverId == null)
+                throw new HubException("Not allowed to send messages in this chat.");
+
             var message = new Message(userId, msgRequest.ChatId, msgRequest.Content);
             await chatService.SaveChatMessage(message);
 
             await Clients.Group(message.ChatId.ToString()).SendAsync("ReceiveMessage", 
-                new{MessageId= message.Id, message.SenderId, message.ChatId, message.Content, message.SentAt});
-            //we should validate the receiver here first
-            var notification = new Notification(msgRequest.ReceiverId, msgRequest.ChatId, null, message.Content ,NotificationType.NewMessage);
+                new { MessageId = message.Id, message.SenderId, message.ChatId, message.Content, message.SentAt });
+
+            var notification = new Notification(receiverId.Value, msgRequest.ChatId, null, message.Content, NotificationType.NewMessage);
             await notificationService.AddNotificationAsync(notification);
-            await Clients.User(msgRequest.ReceiverId.ToString()).SendAsync("ReceiveNotification", notification);
+            await Clients.User(receiverId.Value.ToString()).SendAsync("ReceiveNotification", notification);
         }
         public async Task MarkMessagesAsRead(int chatId)
         {

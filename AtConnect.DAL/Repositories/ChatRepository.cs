@@ -61,5 +61,18 @@ namespace AtConnect.DAL.Repositories
         {
             return await appDbContext.Chats.Where(x=>x.Id == chatId).AnyAsync(x=>x.User1Id == userId || x.User2Id== userId);
         }
+
+        public async Task<int?> GetOtherParticipantIdAsync(int chatId, int userId)
+        {
+            if (chatId < 1 || userId <1) throw new ArgumentException("Invalid Arguments");
+            var chat = await appDbContext.Chats
+                .Where(c => c.Id == chatId && (c.User1Id == userId || c.User2Id == userId))
+                .Select(c => new { c.User1Id, c.User2Id })
+                .FirstOrDefaultAsync();
+
+            if (chat == null) return null;
+
+            return chat.User1Id == userId ? chat.User2Id : chat.User1Id;
+        }
     }
 }
