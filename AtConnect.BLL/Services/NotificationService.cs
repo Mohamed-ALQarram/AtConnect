@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using AtConnect.Core.Models;
 
 
 namespace AtConnect.BLL.Services
@@ -104,7 +105,10 @@ namespace AtConnect.BLL.Services
             return new ResultDTO<bool>(true, "Notification dismissed", true);
         }
 
-       
-
+        public async Task AddNotificationAsync(Notification notification)
+        {
+            await _uow.Notifications.AddAsync(notification);
+            await _uow.SaveChangesAsync();
+        }
     }
 }

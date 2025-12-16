@@ -1,4 +1,5 @@
 ﻿using AtConnect.BLL.DTOs;
+using AtConnect.Core.Models;
 using AtConnect.Core.SharedDTOs;
 using System;
 using System.Collections.Generic;
@@ -15,5 +16,6 @@ namespace AtConnect.BLL.Interfaces
         Task<ResultDTO<bool>> MarkAsReadAsync(int id, int userId);
         Task<ResultDTO<bool>> MarkAllAsReadAsync(int userId);
         Task<ResultDTO<bool>> DismissAsync(int id, int userId);
+        Task AddNotificationAsync(Notification notification);
     }
 }

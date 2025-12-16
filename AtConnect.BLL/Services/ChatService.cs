@@ -20,7 +20,7 @@ namespace AtConnect.BLL.Services
         {
             _unitOfWork = unitOfWork;
         }
-
+        
         public async Task<ResultDTO<PagedResultDto<UserChatDTO>>>  GetUserChatsAsync(int userId, int page=1, int pageSize=10)
         {
             if (userId <= 0 || page<0 || pageSize<0)
@@ -52,5 +52,15 @@ namespace AtConnect.BLL.Services
             return new ResultDTO<object>(true, "Request status has been recorded successfully.", null);
         }
 
+        public async Task SaveChatMessage(Message message)
+        {
+            await _unitOfWork.Messages.AddAsync(message); 
+            await _unitOfWork.SaveChangesAsync();
+        }
+
+        public async Task<bool> IsChatParticipantAsync(int chatId, int userId)
+        {
+            return await _unitOfWork.Chats.IsParticipantAsync(chatId, userId);
+        }
     }
 }
