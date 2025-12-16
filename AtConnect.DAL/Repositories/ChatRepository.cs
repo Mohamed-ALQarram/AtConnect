@@ -15,17 +15,7 @@ namespace AtConnect.DAL.Repositories
         {
             this.appDbContext = appDbContext;
         }
-
-        public async Task<Chat?> GetChatBetweenAsync(int userAId, int userBId)
-        {
-            return await appDbContext.Chats
-                .Include(c => c.User1)
-                .Include(c => c.User2)
-                .Include(c => c.Messages)
-                .FirstOrDefaultAsync(c => (c.User1Id == userAId && c.User2Id == userBId) || 
-                                          (c.User1Id == userBId && c.User2Id == userAId));
-        }
-
+        
         public async Task<PagedResultDto<UserChatDTO>> GetUserChatsAsync(int userId, int page, int pageSize)
         {
             var query = appDbContext.Chats
@@ -65,6 +55,11 @@ namespace AtConnect.DAL.Repositories
                 .ToListAsync();
 
             return new PagedResultDto<UserChatDTO>(items, totalCount, page, pageSize);
+        }
+
+        public async Task<bool> IsParticipantAsync(int chatId, int userId)
+        {
+            return await appDbContext.Chats.Where(x=>x.Id == chatId).AnyAsync(x=>x.User1Id == userId || x.User2Id== userId);
         }
     }
 }

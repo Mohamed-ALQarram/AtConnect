@@ -11,7 +11,7 @@ namespace AtConnect.Core.Models
     {
         private Notification() { } 
 
-        public Notification(int userId,int chatId, int chatRequestId, string message, NotificationType type)
+        public Notification(int userId,int? chatId, int? chatRequestId, string message, NotificationType type)
         {
             UserId = userId;
             ChatId = chatId;
@@ -31,8 +31,8 @@ namespace AtConnect.Core.Models
         public DateTime CreatedAt { get; private set; }
         public bool IsRead { get; private set; }
         public AppUser User { get; private set; } = null!;
-        public Chat? Chat { get; set; }
-        public ChatRequest? ChatRequest { get; set; }
+        public Chat? Chat { get; private set; }
+        public ChatRequest? ChatRequest { get; private set; }
 
         public void MarkAsRead()
         {

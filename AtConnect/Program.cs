@@ -130,7 +130,7 @@ namespace AtConnect
             app.UseAuthorization();
 
             app.MapControllers();
-            app.MapHub<AtConnectHub>("/AtConnectHub"); 
+            app.MapHub<AtConnectHub>("/Hubs/AtConnect"); 
 
 
             app.Run();

@@ -5,7 +5,7 @@ namespace AtConnect.Core.Interfaces
 {
     public interface IChatRepository : IGenericRepository<Chat>
     {
-        Task<Chat?> GetChatBetweenAsync(int userAId, int userBId);
+        Task<bool> IsParticipantAsync(int chatId, int userId);
         Task<PagedResultDto<UserChatDTO>> GetUserChatsAsync(int userId, int page, int pageSize);
 
     }
