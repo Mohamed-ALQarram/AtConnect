@@ -41,20 +41,20 @@ namespace AtConnect.BLL.Services
 
             // IUnitOfWork exposes SaveChangesAsync() (from your snippet) — call it to persist
             await _uow.SaveChangesAsync();
-            #region Create the Notification
+            //#region Create the Notification
 
-            var notification = new Notification(
-                 toUserId,                   // Receiver (User who gets the notification)
-                  null,                       // ChatId (Null, no chat yet)
-                 newRequest.Id,              // ChatRequestId (Linked!)
-                 "You have a new connection request",
-                  NotificationType.ChatRequestReceived
-            );
-            await _uow.Notifications.AddAsync(notification);
-            await _uow.SaveChangesAsync(); // <--- Persist the notification 
+            //var notification = new Notification(
+            //     toUserId,                   // Receiver (User who gets the notification)
+            //      null,                       // ChatId (Null, no chat yet)
+            //     newRequest.Id,              // ChatRequestId (Linked!)
+            //     "You have a new connection request",
+            //      NotificationType.ChatRequestReceived
+            //);
+            //await _uow.Notifications.AddAsync(notification);
+            //await _uow.SaveChangesAsync(); // <--- Persist the notification 
             
-            await _notifier.SendNotificationAsync(toUserId, notification);
-            #endregion
+            //await _notifier.SendNotificationAsync(toUserId, notification);
+            //#endregion
 
             return new ResultDTO<bool>(true, "Request sent successfully", true);
         }

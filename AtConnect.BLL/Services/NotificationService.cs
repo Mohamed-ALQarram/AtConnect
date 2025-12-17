@@ -53,7 +53,7 @@ namespace AtConnect.BLL.Services
         public async Task<ResultDTO<bool>> MarkAsReadAsync(int id, int userId)
         {
             var notification = await _uow.Notifications.GetByKeysAsync(id);
-            if (notification == null || notification.UserId != userId)
+            if (notification == null || notification.ReceiverId != userId)
             {
                 return new ResultDTO<bool>(false, "Notification not found or access denied");
             }
@@ -68,7 +68,7 @@ namespace AtConnect.BLL.Services
         public async Task<ResultDTO<bool>> DismissAsync(int id, int userId)
         {
             var notification = await _uow.Notifications.GetByKeysAsync(id);
-            if (notification == null || notification.UserId != userId)
+            if (notification == null || notification.ReceiverId != userId)
             {
                 return new ResultDTO<bool>(false, "Notification not found or access denied");
             }

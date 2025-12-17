@@ -93,7 +93,7 @@ namespace AtConnect.SignalR_Hubs
             await Clients.Group(message.ChatId.ToString()).SendAsync("ReceiveMessage", 
                 new { MessageId = message.Id, message.SenderId, message.ChatId, message.Content, message.SentAt });
 
-            var notification = new Notification(receiverId.Value, msgRequest.ChatId, null, message.Content, NotificationType.NewMessage);
+            var notification = new Notification(userId, receiverId.Value, msgRequest.ChatId, null, message.Content, NotificationType.NewMessage);
             await notificationService.AddNotificationAsync(notification);
             await Clients.User(receiverId.Value.ToString()).SendAsync("ReceiveNotification", notification);
         }
