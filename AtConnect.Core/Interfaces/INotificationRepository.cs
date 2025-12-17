@@ -5,8 +5,11 @@ namespace AtConnect.Core.Interfaces
 {
     public interface INotificationRepository : IGenericRepository<Notification>
     {
-        Task<IEnumerable<Notification>> GetUnreadNotificationsAsync(int userId);
-        Task<PagedResultDto<Notification>> GetByUserPagedAsync(int userId, int page, int pageSize);
+        Task<IEnumerable<NotificationDTO>> GetUnreadNotificationsAsync(int userId);
+       
+        Task<PagedResultDto<NotificationDTO>> GetByUserPagedAsync(int userId, int page, int pageSize);
+
+        Task<int> MarkAllAsReadAsync(int userId);
 
     }
 
