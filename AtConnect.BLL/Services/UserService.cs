@@ -63,5 +63,8 @@ namespace AtConnect.BLL.Services
             return new ResultDTO<object>(true, "Saved Successfully", null);
             
         }
+
+        public async Task<AppUser?> GetUserById(int id)
+            => await _unitOfWork.Users.GetByKeysAsync(id);
     }
 }

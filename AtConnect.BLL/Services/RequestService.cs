@@ -58,5 +58,73 @@ namespace AtConnect.BLL.Services
 
             return new ResultDTO<bool>(true, "Request sent successfully", true);
         }
+
+        public async Task<ResultDTO<object>> ChangeRequestStatusAsync(int userId, int requestId, RequestStatus status)
+        {
+            // Parallel fetch: request + current user (for notification display)
+            var requestTask = _uow.ChatRequests.GetByKeysAsync(requestId);
+            var currentUserTask = _uow.Users.GetByKeysAsync(userId);
+            
+            await Task.WhenAll(requestTask, currentUserTask);
+            
+            var Request = await requestTask;
+            var currentUser = await currentUserTask;
+            
+            if (Request == null)
+                return new ResultDTO<object>(false, "Invalid RequestId", null);
+            
+            if (currentUser == null)
+                return new ResultDTO<object>(false, "User not found", null);
+            
+            // Authorization: only the receiver can accept/reject
+            if (Request.ReceiverId != userId)
+                return new ResultDTO<object>(false, "Not authorized to change this request", null);
+            
+            // Validate status change
+            if (status == RequestStatus.Pending)
+                return new ResultDTO<object>(false, "Cannot set status to Pending", null);
+
+            var type = NotificationType.ChatRequestReceived;
+            string message;
+            switch (status)
+            {
+                case RequestStatus.Accepted:
+                    Request.Accept();
+                    type = NotificationType.ChatRequestAccepted;
+                    message = $"{currentUser.FirstName} {currentUser.LastName} accepted your chat request";
+                    break;
+                case RequestStatus.Rejected:
+                    Request.Reject();
+                    type = NotificationType.ChatRequestRejected;
+                    message = $"{currentUser.FirstName} {currentUser.LastName} rejected your chat request";
+                    break;
+                default:
+                    return new ResultDTO<object>(false, "Invalid status", null);
+            }
+            
+            _uow.ChatRequests.Update(Request);
+            // Keep original constructor order for backward compatibility
+            var notification = new Notification(Request.SenderId, userId, null, requestId, message, type);
+            await _uow.Notifications.AddAsync(notification);
+            await _uow.SaveChangesAsync();
+            
+            // Send real-time notification to ORIGINAL SENDER
+            await _notifier.SendNotificationAsync(Request.SenderId, new NotificationDTO
+            {
+                UserId = userId,  // Who triggered this (the receiver who accepted/rejected)
+                UserFullName = $"{currentUser.FirstName} {currentUser.LastName}",
+                AvatarUrl = currentUser.ImageURL,
+                CreatedAt = notification.CreatedAt,
+                ChatId = notification.ChatId,
+                Content = notification.Message,
+                notificationType = notification.Type,
+                RequestId = notification.ChatRequestId,
+                IsRead = notification.IsRead
+            });
+           
+            return new ResultDTO<object>(true, "Request status has been recorded successfully.", null);
+        }
+
+
     }
 }

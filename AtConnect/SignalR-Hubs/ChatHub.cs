@@ -3,6 +3,7 @@ using AtConnect.BLL.Services;
 using AtConnect.Core.Enum;
 using AtConnect.Core.Interfaces;
 using AtConnect.Core.Models;
+using AtConnect.Core.SharedDTOs;
 using AtConnect.DTOs.HubDTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -17,13 +18,15 @@ namespace AtConnect.SignalR_Hubs
         private readonly IUserConnectionManager _userConnectionManager;
         private readonly IChatService chatService;
         private readonly INotificationService notificationService;
+        private readonly IUserService userService;
         private readonly UserManager<AppUser> _userManager;
-        public AtConnectHub(IUserConnectionManager userConnectionManager, IChatService chatService, INotificationService notificationService, UserManager<AppUser> userManager)
+        public AtConnectHub(IUserConnectionManager userConnectionManager, IChatService chatService, INotificationService notificationService, UserManager<AppUser> userManager, IUserService userService)
         {
             _userConnectionManager = userConnectionManager;
             this.chatService = chatService;
             this.notificationService = notificationService;
             _userManager = userManager;
+            this.userService = userService;
         }
         private int getUserId()
         {
@@ -81,21 +84,46 @@ namespace AtConnect.SignalR_Hubs
         {
             int userId = getUserId();
             
-            // Get the receiver from the database (also validates sender is a participant)
-            int? receiverId = await chatService.GetOtherParticipantIdAsync(msgRequest.ChatId, userId);
+            // Parallel fetch: receiver validation + sender info (both independent)
+            var receiverTask = chatService.GetOtherParticipantIdAsync(msgRequest.ChatId, userId);
+            var userTask = userService.GetUserById(userId);
+            
+            await Task.WhenAll(receiverTask, userTask);
+            
+            int? receiverId = await receiverTask;
+            var user = await userTask;
             
             if (receiverId == null)
                 throw new HubException("Not allowed to send messages in this chat.");
+            
+            if (user == null)
+                throw new HubException("Sender user not found.");
 
             var message = new Message(userId, msgRequest.ChatId, msgRequest.Content);
             await chatService.SaveChatMessage(message);
 
-            await Clients.Group(message.ChatId.ToString()).SendAsync("ReceiveMessage", 
+            // Parallel: broadcast message + persist notification (independent operations)
+            var broadcastTask = Clients.Group(message.ChatId.ToString()).SendAsync("ReceiveMessage", 
                 new { MessageId = message.Id, message.SenderId, message.ChatId, message.Content, message.SentAt });
+            
+            var notification = new Notification(receiverId.Value, userId, msgRequest.ChatId, null, message.Content, NotificationType.NewMessage);
+            var notifyTask = notificationService.AddNotificationAsync(notification);
+            
+            await Task.WhenAll(broadcastTask, notifyTask);
 
-            var notification = new Notification(userId, receiverId.Value, msgRequest.ChatId, null, message.Content, NotificationType.NewMessage);
-            await notificationService.AddNotificationAsync(notification);
-            await Clients.User(receiverId.Value.ToString()).SendAsync("ReceiveNotification", notification);
+            // Send real-time notification to receiver
+            await Clients.User(receiverId.Value.ToString()).SendAsync("ReceiveNotification", new NotificationDTO
+            {
+                UserId = userId,
+                UserFullName = $"{user.FirstName} {user.LastName}",
+                AvatarUrl = user.ImageURL,
+                ChatId = msgRequest.ChatId,
+                Content = msgRequest.Content,
+                CreatedAt = DateTime.UtcNow,
+                notificationType = NotificationType.NewMessage,
+                IsRead = false,
+                RequestId = null
+            });
         }
         public async Task MarkMessagesAsRead(int chatId)
         {
