@@ -72,12 +72,15 @@ namespace AtConnect.Controllers
         [HttpPost("AcceptRequest")]
         public async Task<ActionResult<ResultDTO<object>>> ChangeChatRequestStatus([FromBody] ChangeRequestStatusDto dto)
         {
+            int? userId = GetCurrentUserId();
+            if (!userId.HasValue)
+                return Unauthorized(new ResultDTO<bool>(false, "Invalid or missing user ID in token"));
+
             var status = dto.IsAccepted ? RequestStatus.Accepted : RequestStatus.Rejected;
-            var response = await _chatService.ChangeRequestStatusAsync(dto.RequestId, status);
+            var response = await _requestService.ChangeRequestStatusAsync(userId.Value, dto.RequestId, status);
             if(!response.Success)
                 return BadRequest(response);
             return response;
-
         }
         [HttpGet("ChatMessages")]
         public async Task<ActionResult<ResultDTO<PagedResultDto<Message>>>> GetChatMessages([FromQuery] GetChatMessagesRequest request)

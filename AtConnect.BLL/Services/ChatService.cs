@@ -44,14 +44,6 @@ namespace AtConnect.BLL.Services
             return new ResultDTO<PagedResultDto<ChatRequestDTO>>(true, null, Requests);
         }
 
-        public async Task<ResultDTO<object>> ChangeRequestStatusAsync(int requestId, RequestStatus status)
-        {
-            var success= await _unitOfWork.ChatRequests.ChangeRequestStatusAsync(requestId, status);
-            if (!success)
-                return new ResultDTO<object>(success, "Invalid RequestId", null);
-            return new ResultDTO<object>(true, "Request status has been recorded successfully.", null);
-        }
-
         public async Task SaveChatMessage(Message message)
         {
             await _unitOfWork.Messages.AddAsync(message); 
