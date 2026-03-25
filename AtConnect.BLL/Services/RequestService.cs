@@ -1,4 +1,4 @@
-﻿using AtConnect.BLL.DTOs;
+using AtConnect.BLL.DTOs;
 using AtConnect.BLL.Interfaces;
 using AtConnect.Core.SharedDTOs;
 using AtConnect.Core.Enum;
@@ -9,26 +9,31 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
 namespace AtConnect.BLL.Services
 {
     public class RequestService : IRequestService
     {
         private readonly IUnitOfWork _uow;
+        private readonly INotifier _notifier;
 
-        public RequestService(IUnitOfWork uow)
+        public RequestService(IUnitOfWork uow, INotifier notifier)
         {
-            _uow = uow ;
+            _uow = uow;
+            _notifier = notifier;
         }
         public async Task<ResultDTO<bool>> SendRequestAsync(int senderId, int toUserId)
         {
             if (senderId == toUserId)
                 return new ResultDTO<bool>(false, "Cannot send a request to yourself.");
 
-            
+            // Parallel fetch: check existing requests + get sender details
+            var existing =await _uow.ChatRequests.GetPendingRequestAsync(toUserId, 1, 100);
+            var sender = await _uow.Users.GetByKeysAsync(senderId);
+
+            if (sender == null)
+                return new ResultDTO<bool>(false, "Sender not found.");
 
             // 2) Check for existing pending requests for the target (avoid duplicates)
-            var existing = await _uow.ChatRequests.GetPendingRequestAsync(toUserId, 1, 100);
             if (existing != null && existing.Items.Any(r => r.SenderId == senderId))
                 return new ResultDTO<bool>(false, "A pending request already exists.");
 
@@ -40,8 +45,101 @@ namespace AtConnect.BLL.Services
 
             // IUnitOfWork exposes SaveChangesAsync() (from your snippet) — call it to persist
             await _uow.SaveChangesAsync();
+            
+            #region Create the Notification
+
+            var notification = new Notification(
+                 toUserId,                   // Receiver (User who gets the notification)
+                 senderId,                   // Sender (Notification constructor has senderId)
+                 null,                       // ChatId (Null, no chat yet)
+                 newRequest.Id,              // ChatRequestId (Linked!)
+                 $"{sender.FirstName} {sender.LastName} sent you a connection request",
+                 NotificationType.ChatRequestReceived
+            );
+            await _uow.Notifications.AddAsync(notification);
+            await _uow.SaveChangesAsync(); // <--- Persist the notification 
+            
+            await _notifier.SendNotificationAsync(toUserId, new NotificationDTO
+            {
+                UserId = senderId,
+                UserFullName = $"{sender.FirstName} {sender.LastName}",
+                AvatarUrl = sender.ImageURL,
+                ChatId = null,
+                RequestId = newRequest.Id,
+                Content = notification.Message,
+                CreatedAt = notification.CreatedAt,
+                IsRead = false,
+                notificationType = NotificationType.ChatRequestReceived
+            });
+            #endregion
 
             return new ResultDTO<bool>(true, "Request sent successfully", true);
         }
+
+        public async Task<ResultDTO<object>> ChangeRequestStatusAsync(int userId, int requestId, RequestStatus status)
+        {
+            // Parallel fetch: request + current user (for notification display)
+            var Request = await _uow.ChatRequests.GetByKeysAsync(requestId);
+            var currentUser =await _uow.Users.GetByKeysAsync(userId);
+            
+            
+            if (Request == null)
+                return new ResultDTO<object>(false, "Invalid RequestId", null);
+            
+            if (currentUser == null)
+                return new ResultDTO<object>(false, "User not found", null);
+            
+            // Authorization: only the receiver can accept/reject
+            if (Request.ReceiverId != userId)
+                return new ResultDTO<object>(false, "Not authorized to change this request", null);
+            
+            // Validate status change
+            if (status == RequestStatus.Pending)
+                return new ResultDTO<object>(false, "Cannot set status to Pending", null);
+
+            var type = NotificationType.ChatRequestReceived;
+            string message;
+            switch (status)
+            {
+                case RequestStatus.Accepted:
+                    Request.Accept();
+                    type = NotificationType.ChatRequestAccepted;
+                    message = $"{currentUser.FirstName} {currentUser.LastName} accepted your chat request";
+                    Chat chat = new(currentUser.Id, Request.SenderId);
+                    await  _uow.Chats.AddAsync(chat);
+                    break;
+                case RequestStatus.Rejected:
+                    Request.Reject();
+                    type = NotificationType.ChatRequestRejected;
+                    message = $"{currentUser.FirstName} {currentUser.LastName} rejected your chat request";
+                    break;
+                default:
+                    return new ResultDTO<object>(false, "Invalid status", null);
+            }
+            
+            _uow.ChatRequests.Update(Request);
+            // Keep original constructor order for backward compatibility
+            var notification = new Notification(Request.SenderId, userId, null, requestId, message, type);
+            await _uow.Notifications.AddAsync(notification);
+            await _uow.SaveChangesAsync();
+            
+            // Send real-time notification to ORIGINAL SENDER
+            await _notifier.SendNotificationAsync(Request.SenderId, new NotificationDTO
+            {
+                UserId = userId,  // Who triggered this (the receiver who accepted/rejected)
+                UserFullName = $"{currentUser.FirstName} {currentUser.LastName}",
+                AvatarUrl = currentUser.ImageURL,
+                CreatedAt = notification.CreatedAt,
+                ChatId = notification.ChatId,
+                Content = notification.Message,
+                notificationType = notification.Type,
+                RequestId = notification.ChatRequestId,
+                IsRead = notification.IsRead
+            });
+           
+            return new ResultDTO<object>(true, "Request status has been recorded successfully.", null);
+        }
+
+
     }
 }

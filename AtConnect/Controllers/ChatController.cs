@@ -1,4 +1,4 @@
-﻿using AtConnect.BLL.DTOs;
+using AtConnect.BLL.DTOs;
 using AtConnect.BLL.Interfaces;
 using AtConnect.Core.Enum;
 using AtConnect.Core.Models;
@@ -6,7 +6,6 @@ using AtConnect.Core.SharedDTOs;
 using AtConnect.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace AtConnect.Controllers
 {
@@ -17,11 +16,11 @@ namespace AtConnect.Controllers
     {
         private readonly IChatService _chatService;
         private readonly IRequestService _requestService;
-
+       
         public ChatController(IChatService chatService, IRequestService requestService)
         {
             _chatService = chatService;
-            _requestService = requestService;
+            _requestService = requestService;     
         }
         [HttpGet("UserChats")]
         public async Task<ActionResult<ResultDTO<PagedResultDto<UserChatDTO>>>> GetUserChats([FromQuery]  PaginationRequest request)
@@ -72,18 +71,42 @@ namespace AtConnect.Controllers
         [HttpPost("AcceptRequest")]
         public async Task<ActionResult<ResultDTO<object>>> ChangeChatRequestStatus([FromBody] ChangeRequestStatusDto dto)
         {
+            int? userId = GetCurrentUserId();
+            if (!userId.HasValue)
+                return Unauthorized(new ResultDTO<bool>(false, "Invalid or missing user ID in token"));
+
             var status = dto.IsAccepted ? RequestStatus.Accepted : RequestStatus.Rejected;
-            var response = await _chatService.ChangeRequestStatusAsync(dto.RequestId, status);
+            var response = await _requestService.ChangeRequestStatusAsync(userId.Value, dto.RequestId, status);
             if(!response.Success)
                 return BadRequest(response);
             return response;
-
         }
         [HttpGet("ChatMessages")]
-        public async Task<ActionResult<ResultDTO<PagedResultDto<Message>>>> GetChatMessages([FromQuery] GetChatMessagesRequest request)
+        public async Task<ActionResult<ResultDTO<PagedResultDto<MessageDto>>>> GetChatMessages([FromQuery] GetChatMessagesRequest request)
         {
+            var userId = GetCurrentUserId();
+            if (userId == null)
+                return Unauthorized(new ResultDTO<PagedResultDto<MessageDto>>(false, "Invalid or missing user ID in token"));
+
+            if (!await _chatService.IsChatParticipantAsync(request.ChatId, userId.Value))
+                return Unauthorized(new ResultDTO<PagedResultDto<MessageDto>>(false, "Not allowed to view these messages"));
+
             var response = await _chatService.GetChatMessagesAsync(request.ChatId, request.Page, request.PageSize);
             if(!response.Success) return BadRequest(response);
+            return response;
+        }
+
+        [HttpGet("{chatId}")]
+        public async Task<ActionResult<ResultDTO<UserChatDTO>>> GetChatById(int chatId)
+        {
+            var userId = GetCurrentUserId();
+            if (userId == null)
+                return Unauthorized(new ResultDTO<UserChatDTO>(false, "Invalid or missing user ID in token"));
+
+            var response = await _chatService.GetChatByIdAsync(chatId, userId.Value);
+            if (!response.Success)
+                return NotFound(response);
+
             return response;
         }
     }

@@ -1,4 +1,4 @@
-﻿using AtConnect.Core.Interfaces;
+using AtConnect.Core.Interfaces;
 using System.Collections.Concurrent;
 
 namespace AtConnect.DAL.Data
@@ -38,12 +38,14 @@ namespace AtConnect.DAL.Data
 
         public void RemoveConnection(int userId, string connectionId)
         {
-                if(Connections.ContainsKey(userId))
+            if (Connections.TryGetValue(userId, out var userConnections))
+            {
+                userConnections.TryRemove(connectionId, out _);
+                if (userConnections.IsEmpty)
                 {
-                    Connections[userId].TryRemove(connectionId, out _);
-                    if(Connections[userId].Count <=1)
-                        Connections.TryRemove(userId, out _);
+                    Connections.TryRemove(userId, out _);
                 }
+            }
         }
     }
 }

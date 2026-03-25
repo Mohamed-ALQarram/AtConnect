@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
 
@@ -8,11 +8,13 @@ namespace AtConnect.Middlewares
     {
         private readonly RequestDelegate _next;
         private readonly ILogger<ErrorHandlingMiddleware> _logger;
+        private readonly IWebHostEnvironment _env;
 
-        public ErrorHandlingMiddleware(RequestDelegate next, ILogger<ErrorHandlingMiddleware> logger)
+        public ErrorHandlingMiddleware(RequestDelegate next, ILogger<ErrorHandlingMiddleware> logger, IWebHostEnvironment env)
         {
             _next = next;
             _logger = logger;
+            _env = env;
         }
 
         public async Task Invoke(HttpContext context)
@@ -29,7 +31,7 @@ namespace AtConnect.Middlewares
                 {
                     Status = StatusCodes.Status500InternalServerError,
                     Title = "Internal Server Error",
-                    Detail = ex.Message,
+                    Detail = _env.IsDevelopment() ? ex.Message : "An unexpected error occurred.",
                     Instance = context.Request.Path
                 };
 

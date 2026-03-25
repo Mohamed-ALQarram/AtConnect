@@ -6,7 +6,8 @@ namespace AtConnect.Core.Interfaces
     public interface IMessageRepository : IGenericRepository<Message>
     {
         public Task AddRangeMessagesAsync(List<Message> messages);
-        public Task<PagedResultDto<Message>> GetChatMessagesAsync(int chatId, int page = 1, int pageSize = 50);
+        public Task<PagedResultDto<MessageDto>> GetChatMessagesAsync(int chatId, int page = 1, int pageSize = 50);
+        public Task<bool> MarkMessagesAsReadAsync(int chatId, int ReaderId);
 
     }
 

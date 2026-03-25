@@ -13,6 +13,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
+using AtConnect.Services;
 namespace AtConnect
 {
     public class Program
@@ -54,17 +55,16 @@ namespace AtConnect
                 options.UseSqlServer(dbOptions.AtConnectSqlServerConnection);
             });
             // Adding CORS
-            // WARNING: AllowAnyOrigin is insecure for production. Specify allowed origins instead.
             builder.Services.AddCors(options =>
             {
-                options.AddPolicy("AllowAll", policy =>
+                options.AddPolicy("CorsPolicy", policy =>
                 {
-                    policy.AllowAnyOrigin()
+                    policy.SetIsOriginAllowed(_=> true) // Prototype: allow my local host origin
                           .AllowAnyMethod()
-                          .AllowAnyHeader();
+                          .AllowAnyHeader()
+                          .AllowCredentials(); // Required for SignalR
                 });
             });
-
 
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
             builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
@@ -74,6 +74,7 @@ namespace AtConnect
             builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<IUserRepository, UserRepository>();
             builder.Services.AddScoped<INotificationService, NotificationService>();
+            builder.Services.AddScoped<INotifier, SignalRNotifier>();
 
 
             var JwtOptions = builder.Configuration.GetSection("AtConnect:Jwt").Get<JwtOptions>();
@@ -106,32 +107,40 @@ namespace AtConnect
                 {
                     options.SaveToken = true;
                     options.TokenValidationParameters = TokenValidationParameters;
+                    
+                    // SignalR sends JWT via query string for WebSocket connections
+                    options.Events = new JwtBearerEvents
+                    {
+                        OnMessageReceived = context =>
+                        {
+                            var accessToken = context.Request.Query["access_token"];
+                            var path = context.HttpContext.Request.Path;
+                            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/Hubs"))
+                            {
+                                context.Token = accessToken;
+                            }
+                            return Task.CompletedTask;
+                        }
+                    };
                 }); 
             var app = builder.Build();
             // Configure the HTTP request pipeline.
-            ////if (app.Environment.IsDevelopment())
-            ////{
-            ////    app.UseSwagger();
-            ////    app.UseSwaggerUI();
-            ////}
-            ///
-            app.UseSwagger();
-            app.UseSwaggerUI(c =>
+            if (app.Environment.IsDevelopment())
             {
-                c.SwaggerEndpoint("/swagger/v1/swagger.json", "AtConnect API V1");
-            });
-            app.UseCors("AllowAll");
-            app.UseMiddleware<ErrorHandlingMiddleware>();
-
-            app.UseHttpsRedirection();
+                app.UseSwagger();
+                app.UseSwaggerUI(c =>
+                {
+                    c.SwaggerEndpoint("/swagger/v1/swagger.json", "AtConnect API V1");
+                });
+            }
             app.UseRouting(); 
-
+            app.UseCors("CorsPolicy");
+            app.UseMiddleware<ErrorHandlingMiddleware>();
+            app.UseHttpsRedirection();
             app.UseAuthentication();
             app.UseAuthorization();
-
             app.MapControllers();
-            app.MapHub<AtConnectHub>("/AtConnectHub"); 
-
+            app.MapHub<AtConnectHub>("/Hubs/AtConnect"); 
 
             app.Run();
         }

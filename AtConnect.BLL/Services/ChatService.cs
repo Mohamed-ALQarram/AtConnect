@@ -1,4 +1,4 @@
-﻿using AtConnect.BLL.DTOs;
+using AtConnect.BLL.DTOs;
 using AtConnect.BLL.Interfaces;
 using AtConnect.Core.Enum;
 using AtConnect.Core.Interfaces;
@@ -20,20 +20,20 @@ namespace AtConnect.BLL.Services
         {
             _unitOfWork = unitOfWork;
         }
-
+        
         public async Task<ResultDTO<PagedResultDto<UserChatDTO>>>  GetUserChatsAsync(int userId, int page=1, int pageSize=10)
         {
-            if (userId <= 0 || page<0 || pageSize<0)
+            if (userId <= 0 || page < 1 || pageSize < 1)
                 return  new ResultDTO<PagedResultDto<UserChatDTO>>(false, "Invalid Arguments", null);
 
             var Chats = await _unitOfWork.Chats.GetUserChatsAsync(userId, page, pageSize);
             return   new ResultDTO<PagedResultDto<UserChatDTO>>(true,null, Chats);
         }
         
-        public async Task<ResultDTO<PagedResultDto<Message>>> GetChatMessagesAsync(int chatId, int page=1, int pageSize=50)
+        public async Task<ResultDTO<PagedResultDto<MessageDto>>> GetChatMessagesAsync(int chatId, int page=1, int pageSize=50)
         {
             var Messages= await _unitOfWork.Messages.GetChatMessagesAsync(chatId, page, pageSize);
-            if (Messages == null) return new ResultDTO<PagedResultDto<Message>>(true, null, null);
+            if (Messages == null) return new ResultDTO<PagedResultDto<MessageDto>>(true, null, null);
             return new (true, null, Messages);
         }
 
@@ -44,13 +44,39 @@ namespace AtConnect.BLL.Services
             return new ResultDTO<PagedResultDto<ChatRequestDTO>>(true, null, Requests);
         }
 
-        public async Task<ResultDTO<object>> ChangeRequestStatusAsync(int requestId, RequestStatus status)
+        public async Task SaveChatMessage(Message message)
         {
-            var success= await _unitOfWork.ChatRequests.ChangeRequestStatusAsync(requestId, status);
-            if (!success)
-                return new ResultDTO<object>(success, "Invalid RequestId", null);
-            return new ResultDTO<object>(true, "Request status has been recorded successfully.", null);
+            await _unitOfWork.Messages.AddAsync(message); 
+            await _unitOfWork.SaveChangesAsync();
         }
 
+        public async Task<bool> IsChatParticipantAsync(int chatId, int userId)
+        {
+            return await _unitOfWork.Chats.IsParticipantAsync(chatId, userId);
+        }
+
+        public async Task<bool> MarkChatMessagesAsReadAsync(int chatId, int ReaderId)
+        {
+            if (chatId < 1 || ReaderId < 1) return  false;
+            return await _unitOfWork.Messages.MarkMessagesAsReadAsync(chatId, ReaderId);
+        }
+
+        public async Task<int?> GetOtherParticipantIdAsync(int chatId, int userId)
+        {
+            if(chatId <1) return null;
+            return await _unitOfWork.Chats.GetOtherParticipantIdAsync(chatId, userId);
+        }
+
+        public async Task<ResultDTO<UserChatDTO>> GetChatByIdAsync(int chatId, int userId)
+        {
+            if (chatId <= 0 || userId <= 0)
+                return new ResultDTO<UserChatDTO>(false, "Invalid arguments", null);
+
+            var chat = await _unitOfWork.Chats.GetChatByIdAsync(chatId, userId);
+            if (chat == null)
+                return new ResultDTO<UserChatDTO>(false, "Chat not found or access denied", null);
+
+            return new ResultDTO<UserChatDTO>(true, null, chat);
+        }
     }
 }

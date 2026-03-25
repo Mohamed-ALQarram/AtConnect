@@ -15,17 +15,7 @@ namespace AtConnect.DAL.Repositories
         {
             this.appDbContext = appDbContext;
         }
-
-        public async Task<Chat?> GetChatBetweenAsync(int userAId, int userBId)
-        {
-            return await appDbContext.Chats
-                .Include(c => c.User1)
-                .Include(c => c.User2)
-                .Include(c => c.Messages)
-                .FirstOrDefaultAsync(c => (c.User1Id == userAId && c.User2Id == userBId) || 
-                                          (c.User1Id == userBId && c.User2Id == userAId));
-        }
-
+        
         public async Task<PagedResultDto<UserChatDTO>> GetUserChatsAsync(int userId, int page, int pageSize)
         {
             var query = appDbContext.Chats
@@ -56,7 +46,9 @@ namespace AtConnect.DAL.Repositories
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .Select(c => new UserChatDTO(
+                    c.Chat.Id,
                     c.OtherUser.Id,
+                    $"{c.OtherUser.FirstName} {c.OtherUser.LastName}",
                     c.OtherUser.ImageURL ?? "",
                     c.OtherUser.IsActive,
                     c.MostRecentMessage != null ? c.MostRecentMessage.Content : string.Empty,
@@ -65,6 +57,59 @@ namespace AtConnect.DAL.Repositories
                 .ToListAsync();
 
             return new PagedResultDto<UserChatDTO>(items, totalCount, page, pageSize);
+        }
+
+        public async Task<bool> IsParticipantAsync(int chatId, int userId)
+        {
+            return await appDbContext.Chats.Where(x=>x.Id == chatId).AnyAsync(x=>x.User1Id == userId || x.User2Id== userId);
+        }
+
+        public async Task<int?> GetOtherParticipantIdAsync(int chatId, int userId)
+        {
+            if (chatId < 1 || userId <1) throw new ArgumentException("Invalid Arguments");
+            var chat = await appDbContext.Chats
+                .Where(c => c.Id == chatId && (c.User1Id == userId || c.User2Id == userId))
+                .Select(c => new { c.User1Id, c.User2Id })
+                .FirstOrDefaultAsync();
+
+            if (chat == null) return null;
+
+            return chat.User1Id == userId ? chat.User2Id : chat.User1Id;
+        }
+
+        public async Task<UserChatDTO?> GetChatByIdAsync(int chatId, int userId)
+        {
+            if (chatId < 1 || userId < 1) return null;
+
+            var result = await appDbContext.Chats
+                .Where(c => c.Id == chatId && (c.User1Id == userId || c.User2Id == userId))
+                .Include(c => c.Messages)
+                .Include(c => c.User1)
+                .Include(c => c.User2)
+                .Select(c => new
+                {
+                    c.Id,
+                    OtherUser = c.User1Id == userId ? c.User2 : c.User1,
+                    MostRecentMessage = c.Messages
+                        .OrderByDescending(m => m.SentAt)
+                        .FirstOrDefault(),
+                    UnreadMessageCount = c.Messages
+                        .Count(m => m.Status != MessageStatus.Seen && m.SenderId != userId)
+                })
+                .FirstOrDefaultAsync();
+
+            if (result == null) return null;
+
+            return new UserChatDTO(
+
+                result.Id,
+                result.OtherUser.Id,
+                $"{result.OtherUser.FirstName} {result.OtherUser.LastName}",
+                result.OtherUser.ImageURL ?? "",
+                result.OtherUser.IsActive,
+                result.MostRecentMessage != null ? result.MostRecentMessage.Content : string.Empty,
+                result.MostRecentMessage != null ? result.MostRecentMessage.SentAt : DateTime.MinValue,
+                result.UnreadMessageCount);
         }
     }
 }

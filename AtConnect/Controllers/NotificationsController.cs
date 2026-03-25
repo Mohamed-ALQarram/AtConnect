@@ -1,10 +1,9 @@
 ﻿using AtConnect.BLL.DTOs;
 using AtConnect.BLL.Interfaces;
-using AtConnect.DTOs;
 using AtConnect.Core.SharedDTOs;
+using AtConnect.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace AtConnect.Controllers
 {

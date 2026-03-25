@@ -11,7 +11,7 @@ namespace AtConnect.DAL.Data.Configurations
         {
             builder.HasKey(n => n.Id);
 
-            builder.Property(n => n.UserId).IsRequired();
+            builder.Property(n => n.ReceiverId).IsRequired();
 
             builder.Property(n => n.Message)
                    .IsRequired()
@@ -26,9 +26,9 @@ namespace AtConnect.DAL.Data.Configurations
             builder.Property(n => n.IsRead)
                    .IsRequired();
 
-            builder.HasOne(n => n.User)
+            builder.HasOne(n => n.Receiver)
                    .WithMany()
-                   .HasForeignKey(n => n.UserId)
+                   .HasForeignKey(n => n.ReceiverId)
                    .OnDelete(DeleteBehavior.Cascade);
 
             builder.HasOne(n => n.Chat)

@@ -15,12 +15,26 @@ namespace AtConnect.DAL.Repositories
             this.appDbContext = appDbContext;
         }
 
-        public async Task<PagedResultDto<Notification>> GetByUserPagedAsync(int userId, int page, int pageSize)
+        public async Task<PagedResultDto<NotificationDTO>> GetByUserPagedAsync(int userId, int page, int pageSize)
         {
             if (page < 1) page = 1;
 
             var query = appDbContext.Notifications
-                .Where(n => n.UserId == userId)
+                .Include(n => n.Sender)
+                .Where(n => n.ReceiverId == userId)
+                .Select(n => new NotificationDTO
+                {
+
+                    UserId = n.SenderId,
+                    ChatId = n.ChatId,
+                    RequestId = n.ChatRequestId,
+                    Content = n.Message,
+                    CreatedAt = n.CreatedAt,
+                    IsRead = n.IsRead,
+                    notificationType = n.Type,
+                    UserFullName = n.Sender.FirstName + " " + n.Sender.LastName,
+                    AvatarUrl = n.Receiver.ImageURL
+                })
                 .OrderByDescending(n => n.CreatedAt);
 
             var totalCount = await query.CountAsync();
@@ -30,15 +44,37 @@ namespace AtConnect.DAL.Repositories
                 .Take(pageSize)
                 .ToListAsync();
 
-            return new PagedResultDto<Notification>(items, totalCount, page, pageSize);
+            return new PagedResultDto<NotificationDTO>(items, totalCount, page, pageSize);
         }
 
-        public async Task<IEnumerable<Notification>> GetUnreadNotificationsAsync(int userId)
+        public async Task<IEnumerable<NotificationDTO>> GetUnreadNotificationsAsync(int userId)
         {
             return await appDbContext.Notifications
-                .Where(n => n.UserId == userId && !n.IsRead)
+                .Include(n => n.Sender)
+                .Where(n => n.ReceiverId == userId && !n.IsRead)
                 .OrderByDescending(n => n.CreatedAt)
+                .Select(n => new NotificationDTO
+                {
+                    
+                    UserId = n.SenderId,
+                    ChatId = n.ChatId,
+                    RequestId = n.ChatRequestId,
+                    Content = n.Message,
+                    CreatedAt = n.CreatedAt,
+                    IsRead = n.IsRead,
+                    notificationType = n.Type,  
+                    UserFullName = n.Sender.FirstName+ " " +n.Sender.LastName,
+                    AvatarUrl = n.Receiver.ImageURL
+                })
                 .ToListAsync();
+        }
+
+        public async Task<int> MarkAllAsReadAsync(int userId)
+        {
+          return await appDbContext.Notifications
+                .Where(n => n.ReceiverId == userId && !n.IsRead)
+                .ExecuteUpdateAsync<Notification>(n => n.SetProperty(p => p.IsRead, true));
+
         }
     }
 }
