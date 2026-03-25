@@ -46,7 +46,9 @@ namespace AtConnect.DAL.Repositories
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .Select(c => new UserChatDTO(
+                    c.Chat.Id,
                     c.OtherUser.Id,
+                    $"{c.OtherUser.FirstName} {c.OtherUser.LastName}",
                     c.OtherUser.ImageURL ?? "",
                     c.OtherUser.IsActive,
                     c.MostRecentMessage != null ? c.MostRecentMessage.Content : string.Empty,
@@ -86,6 +88,7 @@ namespace AtConnect.DAL.Repositories
                 .Include(c => c.User2)
                 .Select(c => new
                 {
+                    c.Id,
                     OtherUser = c.User1Id == userId ? c.User2 : c.User1,
                     MostRecentMessage = c.Messages
                         .OrderByDescending(m => m.SentAt)
@@ -98,7 +101,10 @@ namespace AtConnect.DAL.Repositories
             if (result == null) return null;
 
             return new UserChatDTO(
+
+                result.Id,
                 result.OtherUser.Id,
+                $"{result.OtherUser.FirstName} {result.OtherUser.LastName}",
                 result.OtherUser.ImageURL ?? "",
                 result.OtherUser.IsActive,
                 result.MostRecentMessage != null ? result.MostRecentMessage.Content : string.Empty,

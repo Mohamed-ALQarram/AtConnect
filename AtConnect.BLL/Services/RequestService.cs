@@ -1,4 +1,4 @@
-﻿using AtConnect.BLL.DTOs;
+using AtConnect.BLL.DTOs;
 using AtConnect.BLL.Interfaces;
 using AtConnect.Core.SharedDTOs;
 using AtConnect.Core.Enum;
@@ -26,10 +26,14 @@ namespace AtConnect.BLL.Services
             if (senderId == toUserId)
                 return new ResultDTO<bool>(false, "Cannot send a request to yourself.");
 
-            
+            // Parallel fetch: check existing requests + get sender details
+            var existing =await _uow.ChatRequests.GetPendingRequestAsync(toUserId, 1, 100);
+            var sender = await _uow.Users.GetByKeysAsync(senderId);
+
+            if (sender == null)
+                return new ResultDTO<bool>(false, "Sender not found.");
 
             // 2) Check for existing pending requests for the target (avoid duplicates)
-            var existing = await _uow.ChatRequests.GetPendingRequestAsync(toUserId, 1, 100);
             if (existing != null && existing.Items.Any(r => r.SenderId == senderId))
                 return new ResultDTO<bool>(false, "A pending request already exists.");
 
@@ -41,20 +45,33 @@ namespace AtConnect.BLL.Services
 
             // IUnitOfWork exposes SaveChangesAsync() (from your snippet) — call it to persist
             await _uow.SaveChangesAsync();
-            //#region Create the Notification
-
-            //var notification = new Notification(
-            //     toUserId,                   // Receiver (User who gets the notification)
-            //      null,                       // ChatId (Null, no chat yet)
-            //     newRequest.Id,              // ChatRequestId (Linked!)
-            //     "You have a new connection request",
-            //      NotificationType.ChatRequestReceived
-            //);
-            //await _uow.Notifications.AddAsync(notification);
-            //await _uow.SaveChangesAsync(); // <--- Persist the notification 
             
-            //await _notifier.SendNotificationAsync(toUserId, notification);
-            //#endregion
+            #region Create the Notification
+
+            var notification = new Notification(
+                 toUserId,                   // Receiver (User who gets the notification)
+                 senderId,                   // Sender (Notification constructor has senderId)
+                 null,                       // ChatId (Null, no chat yet)
+                 newRequest.Id,              // ChatRequestId (Linked!)
+                 $"{sender.FirstName} {sender.LastName} sent you a connection request",
+                 NotificationType.ChatRequestReceived
+            );
+            await _uow.Notifications.AddAsync(notification);
+            await _uow.SaveChangesAsync(); // <--- Persist the notification 
+            
+            await _notifier.SendNotificationAsync(toUserId, new NotificationDTO
+            {
+                UserId = senderId,
+                UserFullName = $"{sender.FirstName} {sender.LastName}",
+                AvatarUrl = sender.ImageURL,
+                ChatId = null,
+                RequestId = newRequest.Id,
+                Content = notification.Message,
+                CreatedAt = notification.CreatedAt,
+                IsRead = false,
+                notificationType = NotificationType.ChatRequestReceived
+            });
+            #endregion
 
             return new ResultDTO<bool>(true, "Request sent successfully", true);
         }
@@ -62,13 +79,9 @@ namespace AtConnect.BLL.Services
         public async Task<ResultDTO<object>> ChangeRequestStatusAsync(int userId, int requestId, RequestStatus status)
         {
             // Parallel fetch: request + current user (for notification display)
-            var requestTask = _uow.ChatRequests.GetByKeysAsync(requestId);
-            var currentUserTask = _uow.Users.GetByKeysAsync(userId);
+            var Request = await _uow.ChatRequests.GetByKeysAsync(requestId);
+            var currentUser =await _uow.Users.GetByKeysAsync(userId);
             
-            await Task.WhenAll(requestTask, currentUserTask);
-            
-            var Request = await requestTask;
-            var currentUser = await currentUserTask;
             
             if (Request == null)
                 return new ResultDTO<object>(false, "Invalid RequestId", null);
@@ -92,6 +105,8 @@ namespace AtConnect.BLL.Services
                     Request.Accept();
                     type = NotificationType.ChatRequestAccepted;
                     message = $"{currentUser.FirstName} {currentUser.LastName} accepted your chat request";
+                    Chat chat = new(currentUser.Id, Request.SenderId);
+                    await  _uow.Chats.AddAsync(chat);
                     break;
                 case RequestStatus.Rejected:
                     Request.Reject();

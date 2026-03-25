@@ -1,13 +1,8 @@
 ﻿using AtConnect.BLL.DTOs;
-using AtConnect.Core.SharedDTOs;
 using AtConnect.BLL.Interfaces;
 using AtConnect.Core.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using AtConnect.Core.Models;
+using AtConnect.Core.SharedDTOs;
 
 
 namespace AtConnect.BLL.Services

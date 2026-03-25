@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.14.36401.2
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AtConnect", "AtConnect\AtConnect.csproj", "{B656869C-FF0F-43C3-A34B-2AFC04511AFF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AtConnect.Api", "AtConnect\AtConnect.Api.csproj", "{B656869C-FF0F-43C3-A34B-2AFC04511AFF}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AtConnect.DAL", "AtConnect.DAL\AtConnect.DAL.csproj", "{934EB3FB-4B2A-490B-8F17-FD51755289D2}"
 EndProject
