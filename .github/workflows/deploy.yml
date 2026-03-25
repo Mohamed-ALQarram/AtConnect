@@ -25,7 +25,7 @@ jobs:
       run: dotnet restore
 
     - name: Publish
-      run: dotnet publish ./AtConnect/AtConnect.csproj -c Release -o ./publish -r win-x86 --self-contained true
+      run: dotnet publish ./AtConnect/AtConnect.Api.csproj -c Release -o ./publish -r win-x86 --self-contained true
   
     - name: Deploy to MonsterASP.NET via FTP
       uses: SamKirkland/FTP-Deploy-Action@4.3.0
