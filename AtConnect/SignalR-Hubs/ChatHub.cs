@@ -102,9 +102,9 @@ namespace AtConnect.SignalR_Hubs
             var message = new Message(userId, msgRequest.ChatId, msgRequest.Content);
             await chatService.SaveChatMessage(message);
 
-            // Parallel: broadcast message + persist notification (independent operations)
-            var broadcastTask = Clients.Group(message.ChatId.ToString()).SendAsync("ReceiveMessage", 
-                new { MessageId = message.Id, message.SenderId, message.ChatId, message.Content, message.SentAt });
+            var msg = new MessageDto(message.Id, message.SenderId, message.ChatId, message.Content, message.SentAt, message.Status);
+            await Clients.User(userId.ToString()).SendAsync("ReceiveMessage", msg); 
+            await Clients.User(receiverId.Value.ToString()).SendAsync("ReceiveMessage", msg); 
             
             var notification = new Notification(receiverId.Value, userId, msgRequest.ChatId, null, message.Content, NotificationType.NewMessage);
             var notifyTask = notificationService.AddNotificationAsync(notification);

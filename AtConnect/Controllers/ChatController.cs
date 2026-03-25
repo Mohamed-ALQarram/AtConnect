@@ -1,4 +1,4 @@
-﻿using AtConnect.BLL.DTOs;
+using AtConnect.BLL.DTOs;
 using AtConnect.BLL.Interfaces;
 using AtConnect.Core.Enum;
 using AtConnect.Core.Models;
@@ -6,7 +6,6 @@ using AtConnect.Core.SharedDTOs;
 using AtConnect.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace AtConnect.Controllers
 {
@@ -83,8 +82,15 @@ namespace AtConnect.Controllers
             return response;
         }
         [HttpGet("ChatMessages")]
-        public async Task<ActionResult<ResultDTO<PagedResultDto<Message>>>> GetChatMessages([FromQuery] GetChatMessagesRequest request)
+        public async Task<ActionResult<ResultDTO<PagedResultDto<MessageDto>>>> GetChatMessages([FromQuery] GetChatMessagesRequest request)
         {
+            var userId = GetCurrentUserId();
+            if (userId == null)
+                return Unauthorized(new ResultDTO<PagedResultDto<MessageDto>>(false, "Invalid or missing user ID in token"));
+
+            if (!await _chatService.IsChatParticipantAsync(request.ChatId, userId.Value))
+                return Unauthorized(new ResultDTO<PagedResultDto<MessageDto>>(false, "Not allowed to view these messages"));
+
             var response = await _chatService.GetChatMessagesAsync(request.ChatId, request.Page, request.PageSize);
             if(!response.Success) return BadRequest(response);
             return response;

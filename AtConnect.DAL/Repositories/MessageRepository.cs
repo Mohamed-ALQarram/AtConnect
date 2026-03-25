@@ -21,11 +21,12 @@ namespace AtConnect.DAL.Repositories
             if (messages != null && messages.Count != 0)
                 await appDbContext.Messages.AddRangeAsync(messages);
         }
-        public async Task<PagedResultDto<Message>> GetChatMessagesAsync(int chatId, int page = 1, int pageSize = 50)
+        public async Task<PagedResultDto<MessageDto>> GetChatMessagesAsync(int chatId, int page = 1, int pageSize = 50)
         {
             var query = appDbContext.Messages
                 .Where(msg => msg.ChatId == chatId)
-                .OrderByDescending(msg => msg.SentAt);
+                .OrderByDescending(msg => msg.SentAt)
+                .Select(x => new MessageDto(x.Id, x.SenderId, x.ChatId, x.Content, x.SentAt, x.Status));
 
             var totalCount = await query.CountAsync();
 
@@ -34,7 +35,7 @@ namespace AtConnect.DAL.Repositories
                 .Take(pageSize)
                 .ToListAsync();
 
-            return new PagedResultDto<Message>(items, totalCount, page, pageSize);
+            return new PagedResultDto<MessageDto>(items, totalCount, page, pageSize);
         }
 
         public async Task<bool> MarkMessagesAsReadAsync(int chatId, int ReaderId)

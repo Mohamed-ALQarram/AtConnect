@@ -1,4 +1,4 @@
-﻿using AtConnect.BLL.DTOs;
+using AtConnect.BLL.DTOs;
 using AtConnect.BLL.Interfaces;
 using AtConnect.Core.Enum;
 using AtConnect.Core.Interfaces;
@@ -23,17 +23,17 @@ namespace AtConnect.BLL.Services
         
         public async Task<ResultDTO<PagedResultDto<UserChatDTO>>>  GetUserChatsAsync(int userId, int page=1, int pageSize=10)
         {
-            if (userId <= 0 || page<0 || pageSize<0)
+            if (userId <= 0 || page < 1 || pageSize < 1)
                 return  new ResultDTO<PagedResultDto<UserChatDTO>>(false, "Invalid Arguments", null);
 
             var Chats = await _unitOfWork.Chats.GetUserChatsAsync(userId, page, pageSize);
             return   new ResultDTO<PagedResultDto<UserChatDTO>>(true,null, Chats);
         }
         
-        public async Task<ResultDTO<PagedResultDto<Message>>> GetChatMessagesAsync(int chatId, int page=1, int pageSize=50)
+        public async Task<ResultDTO<PagedResultDto<MessageDto>>> GetChatMessagesAsync(int chatId, int page=1, int pageSize=50)
         {
             var Messages= await _unitOfWork.Messages.GetChatMessagesAsync(chatId, page, pageSize);
-            if (Messages == null) return new ResultDTO<PagedResultDto<Message>>(true, null, null);
+            if (Messages == null) return new ResultDTO<PagedResultDto<MessageDto>>(true, null, null);
             return new (true, null, Messages);
         }
 
