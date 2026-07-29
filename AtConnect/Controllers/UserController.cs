@@ -1,4 +1,4 @@
-﻿using AtConnect.BLL.DTOs;
+using AtConnect.BLL.DTOs;
 using AtConnect.BLL.Interfaces;
 using AtConnect.Core.SharedDTOs;
 using AtConnect.DTOs;
@@ -22,10 +22,7 @@ namespace AtConnect.Controllers
         public async Task<ActionResult<ResultDTO<PagedResultDto<UserListItemDto>>>> GetUsers([FromQuery] PaginationRequest request)
         {
             var userId = GetCurrentUserId();
-            if (userId == null)
-                return Unauthorized(new ResultDTO<PagedResultDto<UserListItemDto>>(false, "Invalid or missing user ID in token"));
-
-            var response = await _userService.GetUsersAsync(userId.Value, request.Page, request.PageSize);
+            var response = await _userService.GetUsersAsync(userId, request.Page, request.PageSize);
             if (!response.Success)
                 return BadRequest(response);
             return response;
@@ -35,10 +32,7 @@ namespace AtConnect.Controllers
         public async Task<ActionResult<ResultDTO<UserListItemDto>>> GetUserProfile(int targetUserId)
         {
             var currentUserId = GetCurrentUserId();
-            if (currentUserId == null)
-                return Unauthorized(new ResultDTO<List<UserListItemDto>>(false, "Invalid or missing user ID in token"));
-
-            var response = await _userService.GetUserProfileByIdAsync((int) currentUserId, targetUserId);
+            var response = await _userService.GetUserProfileByIdAsync(currentUserId, targetUserId);
             if (!response.Success)
                 return BadRequest(response);
             return response;

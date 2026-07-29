@@ -1,4 +1,4 @@
-﻿using AtConnect.Core.SharedDTOs;
+using AtConnect.Core.SharedDTOs;
 using AtConnect.Core.Models;
 
 namespace AtConnect.Core.Interfaces
@@ -9,8 +9,8 @@ namespace AtConnect.Core.Interfaces
         Task<bool> CheckUserNameAsync(string UserName);
         Task<bool> CheckUnVerifiedEmailAsync(string Email);
         Task<AppUser?> GetByUserNameOrEmailAsync(string UserNameOrEmail);
-        public  Task<PagedResultDto<UserListItemDto>> GetUsersAsync(int currentUserId, int page, int pageSize);
-        public Task<UserListItemDto?> GetUserProfileAsync(int currentUserId, int targetUserId);
+        public Task<PagedResultDto<UserListItemDto>> GetUsersAsync(int? currentUserId, int page, int pageSize);
+        public Task<UserListItemDto?> GetUserProfileAsync(int? currentUserId, int targetUserId);
 
     }
 
