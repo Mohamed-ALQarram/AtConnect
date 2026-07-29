@@ -125,6 +125,7 @@ namespace AtConnect
                 }); 
             var app = builder.Build();
             // Configure the HTTP request pipeline.
+            app.UseCors("CorsPolicy");
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
@@ -134,7 +135,6 @@ namespace AtConnect
                 });
             }
             app.UseRouting(); 
-            app.UseCors("CorsPolicy");
             app.UseMiddleware<ErrorHandlingMiddleware>();
             app.UseHttpsRedirection();
             app.UseAuthentication();
