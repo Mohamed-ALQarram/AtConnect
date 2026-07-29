@@ -1,4 +1,4 @@
-﻿using AtConnect.BLL.DTOs;
+using AtConnect.BLL.DTOs;
 using AtConnect.Core.Enum;
 using AtConnect.Core.Models;
 using AtConnect.Core.SharedDTOs;
@@ -15,8 +15,8 @@ namespace AtConnect.BLL.Interfaces
     {
         Task<AppUser?> GetUserById(int id);
         Task UpdateUserAsync(AppUser user);
-        Task<ResultDTO<PagedResultDto<UserListItemDto>>> GetUsersAsync(int currentUserId, int page, int pageSize);
-        public  Task<ResultDTO<UserListItemDto>> GetUserProfileByIdAsync(int currentUserId, int targetUserId);
+        Task<ResultDTO<PagedResultDto<UserListItemDto>>> GetUsersAsync(int? currentUserId, int page, int pageSize);
+        public Task<ResultDTO<UserListItemDto>> GetUserProfileByIdAsync(int? currentUserId, int targetUserId);
         public Task<ResultDTO<object>> UpdateUserProfileAsync(int userId, string? FirstName, string? LastName, string? ProfileImageUrl, string? Bio, string? About);
     }
 }

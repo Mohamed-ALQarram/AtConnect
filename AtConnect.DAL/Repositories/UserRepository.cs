@@ -1,4 +1,4 @@
-﻿using AtConnect.Core.Interfaces;
+using AtConnect.Core.Interfaces;
 using AtConnect.Core.Models;
 using AtConnect.Core.SharedDTOs;
 using AtConnect.DAL.Data;
@@ -44,11 +44,11 @@ namespace AtConnect.DAL.Repositories
             return await appDbContext.AppUsers.FirstOrDefaultAsync(x=>x.UserName ==  UserNameOrEmail || x.Email == UserNameOrEmail);
         }
 
-        public async Task<PagedResultDto<UserListItemDto>> GetUsersAsync(int currentUserId, int page, int pageSize)
+        public async Task<PagedResultDto<UserListItemDto>> GetUsersAsync(int? currentUserId, int page, int pageSize)
         {
             var query =
                 from user in appDbContext.AppUsers
-                where user.Id != currentUserId && user.isEmailVerified == true
+                where (currentUserId == null || user.Id != currentUserId.Value) && user.isEmailVerified == true
                 select new UserListItemDto
                 {
                     Id = user.Id,
@@ -58,10 +58,10 @@ namespace AtConnect.DAL.Repositories
                     AboutUser = user.AboutUser ?? "",
                     UserName = user.UserName,
                     // Proper left join with ChatRequests
-                    ChatRequest = appDbContext.ChatRequests
+                    ChatRequest = currentUserId == null ? null : appDbContext.ChatRequests
                         .Where(cr =>
-                               ((cr.SenderId == currentUserId && cr.ReceiverId == user.Id)
-                            || (cr.ReceiverId == currentUserId && cr.SenderId == user.Id)))
+                               ((cr.SenderId == currentUserId.Value && cr.ReceiverId == user.Id)
+                            || (cr.ReceiverId == currentUserId.Value && cr.SenderId == user.Id)))
                         .OrderByDescending(cr => cr.CreatedAt)
                         .FirstOrDefault()
                 };
@@ -77,7 +77,7 @@ namespace AtConnect.DAL.Repositories
             return new PagedResultDto<UserListItemDto>(items, totalCount, page, pageSize);
         }
     
-        public async Task<UserListItemDto?> GetUserProfileAsync(int currentUserId, int targetUserId)
+        public async Task<UserListItemDto?> GetUserProfileAsync(int? currentUserId, int targetUserId)
         {
             var query =
                 from user in appDbContext.AppUsers
@@ -91,10 +91,10 @@ namespace AtConnect.DAL.Repositories
                     AboutUser = user.AboutUser ?? "",
                     UserName = user.UserName,
                     // Proper left join with ChatRequests
-                    ChatRequest = appDbContext.ChatRequests
+                    ChatRequest = currentUserId == null ? null : appDbContext.ChatRequests
                         .Where(cr =>
-                               ((cr.SenderId == currentUserId && cr.ReceiverId == targetUserId)
-                            || (cr.ReceiverId == currentUserId && cr.SenderId == targetUserId)))
+                               ((cr.SenderId == currentUserId.Value && cr.ReceiverId == targetUserId)
+                            || (cr.ReceiverId == currentUserId.Value && cr.SenderId == targetUserId)))
                         .OrderByDescending(cr => cr.CreatedAt)
                         .FirstOrDefault()
                 };
