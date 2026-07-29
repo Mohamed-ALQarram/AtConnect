@@ -17,7 +17,7 @@ namespace AtConnect.Controllers
         {
             _userService = userService;
         }
-
+        [AllowAnonymous]
         [HttpGet("AllUsers")]
         public async Task<ActionResult<ResultDTO<PagedResultDto<UserListItemDto>>>> GetUsers([FromQuery] PaginationRequest request)
         {
@@ -30,6 +30,7 @@ namespace AtConnect.Controllers
                 return BadRequest(response);
             return response;
         }
+        [AllowAnonymous]
         [HttpGet("UserProfile")]
         public async Task<ActionResult<ResultDTO<UserListItemDto>>> GetUserProfile(int targetUserId)
         {
